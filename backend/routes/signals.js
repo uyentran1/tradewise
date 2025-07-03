@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const {calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands} = require('../utils/indicators');
+
 
 // GET /signals?symbol=AAPL
 router.get('/', async (req, res) => {
@@ -15,24 +17,24 @@ router.get('/', async (req, res) => {
         const prices = response.data.values;
         // console.log(prices);
 
-        function calculateSMA(prices, period=20) {
-            const closes = prices.slice(0, period).map(p => parseFloat(p.close));
-            const sum = closes.reduce((acc, val) => acc + val, 0);
-            return (sum / period).toFixed(2);
-        }
-
-        const sma20 = calculateSMA(prices, 20);
+        const sma = calculateSMA(prices);
+        const rsi = calculateRSI(prices);
+        const macd = calculateMACD(prices);
+        const bollinger = calculateBollingerBands(prices);
 
         // Placeholder: compute indicators
         const signalData = {
             symbol,
-            sma: sma20,
-            rsi: 55.2,
-            macd: { value: 1.2, signal: 0.9 },
+            sma: sma.toFixed(2),
+            rsi: rsi.toFixed(2),
+            macd: { 
+                value: macd.value.toFixed(2), 
+                signal: macd.signal.toFixed(2),
+            },
             bollinger: {
-                upper: 160.2,
-                lower: 140.4,
-                currentPrice: parseFloat(prices[0].close)
+                upper: bollinger.upper.toFixed(2),
+                lower: bollinger.lower.toFixed(2),
+                currentPrice: bollinger.currentPrice.toFixed(2),
             },
             recommendation: 'Hold'
         };
