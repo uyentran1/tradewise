@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const {calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands} = require('../utils/indicators');
-
+const { calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands } = require('../utils/indicators');
+const { generateRecommendation } = require('../utils/signalEngine');
 
 // GET /signals?symbol=AAPL
 router.get('/', async (req, res) => {
@@ -15,12 +15,14 @@ router.get('/', async (req, res) => {
 
         const response = await axios.get(url);
         const prices = response.data.values;
+        const price = parseFloat(prices[0].close);
         // console.log(prices);
 
         const sma = calculateSMA(prices);
         const rsi = calculateRSI(prices);
         const macd = calculateMACD(prices);
         const bollinger = calculateBollingerBands(prices);
+        const recommendation = generateRecommendation({ rsi, macd, price, sma, bollinger });
 
         // Placeholder: compute indicators
         const signalData = {
@@ -36,7 +38,7 @@ router.get('/', async (req, res) => {
                 lower: bollinger.lower.toFixed(2),
                 currentPrice: bollinger.currentPrice.toFixed(2),
             },
-            recommendation: 'Hold'
+            recommendation
         };
 
         res.json(signalData);
