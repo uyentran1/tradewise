@@ -1,21 +1,23 @@
-// Load environment variables from .env
-require('dotenv').config();
-// console.log('DATABASE_URL:', process.env.DATABASE_URL);
+require('dotenv').config(); // Load environment variables from .env
 
 const pool = require('./db');
 const express = require('express');
 const cors = require('cors');
+const signalRoute = require('./routes/signals');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json()); // for parsing JSON requests
+app.use('/signals', signalRoute);
+
 
 // Simple test route
 app.get('/', (req, res) => {
   res.send('TradeWise backend server is running');
 });
+
 
 app.get('/time', async (req, res) => {
   try {
@@ -26,10 +28,6 @@ app.get('/time', async (req, res) => {
     res.status(500).send('Database error');
   }
 });
-
-// Register route
-const signalRoute = require('./routes/signals');
-app.use('/signals', signalRoute);
 
 
 // Start server
