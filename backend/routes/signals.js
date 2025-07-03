@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
         const rsi = calculateRSI(prices);
         const macd = calculateMACD(prices);
         const bollinger = calculateBollingerBands(prices);
-        const recommendation = generateRecommendation({ rsi, macd, price, sma, bollinger });
+        const { recommendation, explanation } = generateRecommendation({ rsi, macd, price, sma, bollinger });
 
         // Placeholder: compute indicators
         const signalData = {
@@ -38,7 +38,8 @@ router.get('/', async (req, res) => {
                 lower: bollinger.lower.toFixed(2),
                 currentPrice: bollinger.currentPrice.toFixed(2),
             },
-            recommendation
+            recommendation,
+            explanation
         };
 
         res.json(signalData);
