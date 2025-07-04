@@ -1,6 +1,3 @@
-require('dotenv').config(); // Load environment variables from .env
-
-const pool = require('./db');
 const express = require('express');
 const cors = require('cors');
 const signalRoute = require('./routes/signals');
@@ -8,16 +5,16 @@ const searchRoute = require('./routes/search');
 const authRoute = require('./routes/auth');
 
 const app = express();
+
 app.use(cors()); // Middleware
 app.use(express.json()); // for parsing JSON requests
+
 app.use('/signals', signalRoute);
 app.use('/search', searchRoute);
 app.use('/auth', authRoute);
 
-// Test route
-app.get('/', (req, res) => {
-  res.send('TradeWise backend server is running');
-});
+// Test routes
+app.get('/', (req, res) => res.send('TradeWise backend server is running'));
 
 app.get('/time', async (req, res) => {
   try {
@@ -29,9 +26,4 @@ app.get('/time', async (req, res) => {
   }
 });
 
-// Start server
-const PORT = process.env.PORT || 5050;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
-
+module.exports = app;
