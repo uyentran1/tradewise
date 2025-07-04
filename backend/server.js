@@ -4,20 +4,20 @@ const pool = require('./db');
 const express = require('express');
 const cors = require('cors');
 const signalRoute = require('./routes/signals');
+const searchRoute = require('./routes/search');
+const authRoute = require('./routes/auth');
 
 const app = express();
-
-// Middleware
-app.use(cors());
+app.use(cors()); // Middleware
 app.use(express.json()); // for parsing JSON requests
 app.use('/signals', signalRoute);
+app.use('/search', searchRoute);
+app.use('/auth', authRoute);
 
-
-// Simple test route
+// Test route
 app.get('/', (req, res) => {
   res.send('TradeWise backend server is running');
 });
-
 
 app.get('/time', async (req, res) => {
   try {
@@ -28,7 +28,6 @@ app.get('/time', async (req, res) => {
     res.status(500).send('Database error');
   }
 });
-
 
 // Start server
 const PORT = process.env.PORT || 5050;
