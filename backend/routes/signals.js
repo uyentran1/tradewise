@@ -17,7 +17,7 @@ const fetchPriceData = async (symbol) => {
 
     try {
         const response = await axios.get(url, {params});
-        let prices = response.data?.values
+        let prices = response.data?.values;
         // console.log(prices);
 
         if (!prices || prices.length < 30) {
@@ -100,16 +100,16 @@ router.get('/', async (req, res) => {
 
         const signalData = {
             symbol,
-            sma: sma.toFixed(2),
-            rsi: rsi.toFixed(2),
+            sma,
+            rsi,
             macd: { 
-                value: macd.value.toFixed(2), 
-                signal: macd.signal.toFixed(2),
+                value: macd.value,
+                signal: macd.signal,
             },
             bollinger: {
-                upper: bollinger.upper.toFixed(2),
-                lower: bollinger.lower.toFixed(2),
-                currentPrice: price.toFixed(2),
+                upper: bollinger.upper,
+                lower: bollinger.lower,
+                currentPrice: price,
             },
             recommendation,
             explanation,
