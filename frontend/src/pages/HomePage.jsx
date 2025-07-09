@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 
 const HomePage = () => {
@@ -11,8 +11,8 @@ const HomePage = () => {
         <nav className="space-x-4 text-blue-600 font-medium">
           <a href="/">Home</a>
           <a href="/about">About</a>
-          <a href="/auth/register">Register</a>
-          <a href="/auth/login">Log In</a>
+          <a href="/register">Register</a>
+          <a href="/login">Log In</a>
         </nav>
       </header>
 
@@ -51,19 +51,19 @@ const HomePage = () => {
           <div className="flex flex-col md:flex-row justify-around gap-6 text-center">
             <div>
               <div className="w-32 h-32 bg-blue-100 rounded-md mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-blue-500">(🔍)</span>
+                <span className="text-2xl text-blue-500">🔍</span>
               </div>
               <p>1. Search for a stock</p>
             </div>
             <div>
               <div className="w-32 h-32 bg-blue-100 rounded-md mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-blue-500">(📈)</span>
+                <span className="text-2xl text-blue-500">📈</span>
               </div>
               <p>2. View signal and breakdown</p>
             </div>
             <div>
               <div className="w-32 h-32 bg-blue-100 rounded-md mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-blue-500">(🧠)</span>
+                <span className="text-2xl text-blue-500">🧠</span>
               </div>
               <p>3. Make informed trading decisions</p>
             </div>
