@@ -6,10 +6,10 @@ const jwt = require('jsonwebtoken');
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
-    if (!email || !password) 
-        return res.status(400).json({ error: 'Email and password are required.' });
+    if (!email || !password || !fullName) 
+        return res.status(400).json({ error: 'Full name, email and password are required.' });
 
     try {
         // Check if email already exists
@@ -22,8 +22,8 @@ router.post('/register', async (req, res) => {
 
         // Insert into database
         const newUser = await pool.query(
-            'INSERT INTO "User" (email, password) VALUES ($1, $2) RETURNING id, email, created_at',
-            [email, hashedPassword]
+            'INSERT INTO "User" (full_name, email, password) VALUES ($1, $2, $3) RETURNING id, full_name, email, created_at',
+            [fullName, email, hashedPassword]
         );
 
         res.status(201).json({ message: 'User registered', user: newUser.rows[0] });
