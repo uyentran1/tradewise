@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import API from '../api';
 import Layout from '../layouts/Layout';
 
@@ -7,19 +8,23 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent browser to reload page
 
     try {
       const res = await API.post('/auth/login', { email, password });
 
-      //TODO: Later store the token here using localStorage
-      // localStorage.setItem('tokem', res.data.token);
+      // localStorage.setItem('token', res.data.token); // Store the token
+      login(res.data.token); // Stores token and decodes user
 
       setMessage('Login successful!');
       setEmail('');
       setPassword('');
+
+      navigate('/'); // Redirect to HomePage
     } catch (err) {
       console.error(err);
       const errorMsg = err?.response?.data?.error || 'Login failed. Please try again.';
