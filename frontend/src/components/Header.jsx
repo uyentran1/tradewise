@@ -16,7 +16,7 @@ const Header = ({ hideLink }) => {
                 
                 {user ? (
                     <>
-                        <span className="text-gray-600">👋 Hello, {user.fullName || user.email}!</span>
+                        <span className="text-gray-600">Hello, {user.fullName || user.email}!</span>
                         {/* <button onClick={logout} className="text-blue-600 underline ml-4">Logout</button> */}
                         <button
                             onClick={logout}
