@@ -6,10 +6,10 @@ const jwt = require('jsonwebtoken');
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
-    if (!email || !password) 
-        return res.status(400).json({ error: 'Email and password are required.' });
+    if (!email || !password || !fullName) 
+        return res.status(400).json({ error: 'Full name, email and password are required.' });
 
     try {
         // Check if email already exists
@@ -22,11 +22,11 @@ router.post('/register', async (req, res) => {
 
         // Insert into database
         const newUser = await pool.query(
-            'INSERT INTO "User" (email, password) VALUES ($1, $2) RETURNING id, email, created_at',
-            [email, hashedPassword]
+            'INSERT INTO "User" (full_name, email, password) VALUES ($1, $2, $3) RETURNING id, full_name, email, created_at',
+            [fullName, email, hashedPassword]
         );
 
-        res.status(201).json({ message: 'User registered', user: newUser.rows[0] });
+        res.status(201).json({ message: 'User registered sucessfully.', user: newUser.rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Registration failed.' });
@@ -38,21 +38,25 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password)
-        return res.status(400).json({ error: 'Email and password are required' });
+        return res.status(400).json({ error: 'Email and password are required.' });
 
     try {
         const userQuery = await pool.query('SELECT * FROM "User" WHERE email = $1', [email]);
         if (userQuery.rows.length === 0)
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'This email has not been registered.' });
 
         const user = userQuery.rows[0];
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+        if (!isMatch) return res.status(401).json({ error: 'Invalid password.' });
 
         // Generate JWT
         const token = jwt.sign(
-        { userId: user.id, email: user.email },
+        { 
+            userId: user.id, 
+            email: user.email,
+            fullName: user.full_name,
+        },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
         );
@@ -60,7 +64,7 @@ router.post('/login', async (req, res) => {
         res.json({ token, user: { id: user.id, email: user.email } });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Login failed' });
+        res.status(500).json({ error: 'Error while trying to log in.' });
     }
 });
 
