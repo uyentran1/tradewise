@@ -3,9 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import API from "../api";
 import Layout from "../layouts/Layout";
-import CandlestickChart from '../components/CandleStickChart';
+import StockChart from '../components/StockChart';
 import { calculateSMAArray } from '../utilities/indicators';
-
 
 const SignalPage = () => {
   const { symbol } = useParams();
@@ -21,10 +20,20 @@ const SignalPage = () => {
         const res = await API.get(`/signals?symbol=${symbol}`);
         setSignal(res.data);
         setError("");
+        
+        const prices = res.data.prices;
 
-        const prices = res.data.prices; // assuming this is OHLC
-        setOhlc(prices);
-        setSma(calculateSMAArray(prices)); 
+        // Sort the prices BEFORE calculating SMA
+        const sortedPrices = [...prices].sort(
+          (a, b) => new Date(a.datetime) - new Date(b.datetime)
+        );
+        console.log('Sorted prices first 3:', sortedPrices.slice(0, 3).map(p => p.datetime));
+        console.log('Sorted prices last 3:', sortedPrices.slice(-3).map(p => p.datetime));
+
+        setOhlc(sortedPrices); // Use sorted data
+        setSma(calculateSMAArray(sortedPrices)); // Calculate SMA on sorted data
+        console.log("SMA: ", sma.map(p => p.datetime));
+        
       } catch (err) {
         console.error(err);
         setError(err.response?.data?.error || "Failed to fetch signal");
@@ -37,8 +46,7 @@ const SignalPage = () => {
   }, [symbol]); // Runs effect when symbol changes
 
   if (loading) return <div className="text-center mt-8">Loading signal...</div>;
-  if (error)
-    return <div className="text-center text-red-600 mt-8">{error}</div>;
+  if (error) return <div className="text-center text-red-600 mt-8">{error}</div>;
   if (!signal) return null;
 
   return (
@@ -46,7 +54,7 @@ const SignalPage = () => {
       <div className="max-w-5xl mx-auto p-6">
         <Link
           to="/search"
-          className="text-blue-600 hover:underline mb-4 inline-block"
+          className="text-blue-500 hover:underline mb-4 inline-block"
         >
           &larr; Back To Search
         </Link>
@@ -85,13 +93,8 @@ const SignalPage = () => {
         </div>
 
         {/* Interactive Chart */}
-        <section className="w-full h-[400px] bg-blue-100 rounded mb-8 flex items-center justify-center">
-          <p className="text-gray-600">
-            [ Chart Placeholder: candlestick, MA overlay, volume bars ]
-            <section className="mb-8">
-              <CandlestickChart ohlc={ohlc} sma={sma} />
-            </section>
-          </p>
+        <section className="w-full bg-blue-100 rounded mb-8 p-4">
+          <StockChart ohlc={ohlc} sma={sma} />
         </section>
 
         {/* Technical Signals */}
