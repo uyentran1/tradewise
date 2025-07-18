@@ -21,7 +21,7 @@ const SearchBar = () => {
                 placeholder="Enter stock symbol (e.g. AAPL)"
                 className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            <button type='submit' className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Search</button>
+            <button type='submit' className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Search</button>
         </form>
     );
 };
