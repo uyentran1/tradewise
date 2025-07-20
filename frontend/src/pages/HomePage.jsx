@@ -18,15 +18,15 @@ const HomePage = () => {
       <section className="w-full bg-white py-10 px-6">
         <div className="flex flex-col md:flex-row justify-around text-center gap-6">
           <div>
-            <p className="text-blue-500 text-3xl mb-2">✔️</p>
+            {/* <p className="text-blue-500 text-3xl mb-2">✔️</p> */}
             <p className="font-semibold">Timely Technical Signals</p>
           </div>
           <div>
-            <p className="text-blue-500 text-3xl mb-2">✔️</p>
+            {/* <p className="text-blue-500 text-3xl mb-2">✔️</p> */}
             <p className="font-semibold">Easy to Understand Indicators</p>
           </div>
           <div>
-            <p className="text-blue-500 text-3xl mb-2">✔️</p>
+            {/* <p className="text-blue-500 text-3xl mb-2">✔️</p> */}
             <p className="font-semibold">Beginner-Friendly Insights</p>
           </div>
         </div>
