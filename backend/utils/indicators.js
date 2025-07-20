@@ -52,12 +52,9 @@ function calculateMACD(prices) {
 
         const ema12_i = calculateEMA(slice26.slice(-12), 12);
         const ema26_i = calculateEMA(slice26, 26);
-        console.log("ema12_i: ", ema12_i);
-        console.log("ema26_i: ", ema26_i);
+
         macdHistory.push(ema26_i - ema12_i);
     }
-
-    console.log("MACD history: ", macdHistory);
 
     const signal = calculateEMA(macdHistory, 9);
 
