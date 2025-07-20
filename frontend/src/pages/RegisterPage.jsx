@@ -35,93 +35,133 @@ const RegisterPage = () => {
 
   return (
     <Layout showSearch={false} hideLink="register">
-      <div className="flex justify-center items-center py-12 px-6">
-        <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-          <h2 className="text-3xl font-bold mb-2 text-center">Create Your Account</h2>
-          <p className="text-center text-gray-600 mb-6">
-            Start tracking smarter signals today.
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex justify-center items-center py-12 px-6">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-blue-500/5"></div>
+        
+        <div className="relative z-10 w-full max-w-md">
+          <div className="bg-white border border-purple-200 p-8 rounded-2xl shadow-xl">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+                Create Your Account
+              </h2>
+              <p className="text-gray-600">
+                Start tracking smarter signals today.
+              </p>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Full name"
-              value={fullName}
-              onChange={(e) => {
-                setFullName(e.target.value);
-                setMessage('');
-              }}
-              className="w-full p-3 border border-gray-300 rounded"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setMessage('');
-              }}
-              className="w-full p-3 border border-gray-300 rounded"
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setMessage('');
-              }}
-              className="w-full p-3 border border-gray-300 rounded"
-              required
-            />
-            <input
-              type="password"
-              name="confirm"
-              placeholder="Confirm password"
-              value={confirm}
-              onChange={(e) => {
-                setConfirm(e.target.value);
-                setMessage('');
-              }}
-              className="w-full p-3 border border-gray-300 rounded"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-3 rounded font-semibold hover:bg-blue-700 transition"
-            >
-              Sign Up
-            </button>
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Full name"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setMessage('');
+                  }}
+                  className="w-full p-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gradient-to-r from-purple-50/50 to-pink-50/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setMessage('');
+                  }}
+                  className="w-full p-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gradient-to-r from-pink-50/50 to-blue-50/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setMessage('');
+                  }}
+                  className="w-full p-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gradient-to-r from-blue-50/50 to-purple-50/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <input
+                  type="password"
+                  name="confirm"
+                  placeholder="Confirm password"
+                  value={confirm}
+                  onChange={(e) => {
+                    setConfirm(e.target.value);
+                    setMessage('');
+                  }}
+                  className="w-full p-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gradient-to-r from-purple-50/50 to-pink-50/50"
+                  required
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-4 rounded-xl font-semibold hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              >
+                Sign Up
+              </button>
+            </form>
 
-          <div className="text-center my-4 text-gray-600">or sign up with</div>
-          <div className="flex justify-center mb-4">
-            <button className="w-10 h-10 border rounded-full flex items-center justify-center">
-              <img src="/google-icon.svg" alt="Sign up with Google" className="w-6 h-6" />
-            </button>
-          </div>
+            {/* Social Login */}
+            <div className="text-center my-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-purple-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">or sign up with</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-center mb-6">
+              <button className="w-12 h-12 border border-purple-200 rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all duration-200 group">
+                <img src="/google-icon.svg" alt="Sign up with Google" className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
 
-          <p className="text-center text-sm">
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-500 hover:underline">
-              Log in.
-            </Link>
-          </p>
-
-          {message && (
-            <p
-              className={`mt-4 text-sm text-center ${
-                message.includes('successful') ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {message}
+            {/* Footer */}
+            <p className="text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="text-purple-600 hover:text-purple-800 font-medium hover:underline transition-colors">
+                Log in.
+              </Link>
             </p>
-          )}
+
+            {/* Message Display */}
+            {message && (
+              <div className={`mt-6 p-4 rounded-xl text-sm text-center border ${
+                message.includes('successful') 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
+              }`}>
+                {message}
+              </div>
+            )}
+          </div>
+          
+          {/* Bottom decoration */}
+          <div className="text-center mt-8 text-gray-500 text-sm">
+            <p>Join thousands of traders making smarter decisions</p>
+          </div>
         </div>
       </div>
     </Layout>

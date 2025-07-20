@@ -35,12 +35,12 @@ const SignalPage = () => {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-purple-50/30 via-pink-50/20 to-blue-50/30 min-h-screen">
-        <Link
+        {/* <Link
           to="/search"
           className="text-purple-600 hover:text-purple-800 hover:underline mb-4 inline-block font-medium"
         >
           &larr; Back To Search
-        </Link>
+        </Link> */}
 
         {/* Stock Info & Signal Overview */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
