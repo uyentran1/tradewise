@@ -7,6 +7,16 @@ const { generateRecommendation } = require('../utils/signalEngine');
 
 const OUTPUT_SIZE = 50;
 
+// Get customised weights of indicators from query or use default values
+const parseWeights = (query) => {
+    return {
+        rsi: parseFloat(query.rsiWeight) || 3,
+        macd: parseFloat(query.macdWeight) || 2,
+        sma: parseFloat(query.smaWeight) || 1.5,
+        bollinger: parseFloat(query.bollingerWeight) || 1,
+    };
+};
+
 const fetchPriceData = async (symbol) => {
     const url = `https://api.twelvedata.com/time_series`;
     const params = {
@@ -47,12 +57,13 @@ const getCachedData = (cachedSignal, prices) => {
         bollinger: {
             upper: row.bollinger_upper,
             lower: row.bollinger_lower,
-            currentPrice: row.current_price
         },
+        currentPrice: row.current_price,
+        score: row.score,
         recommendation: row.recommendation,
         explanation: row.explanation,
         source: 'cached',
-        prices // Prices data for frontend's stockchart
+        prices // For charting
     };
     
     return cachedData;
@@ -65,28 +76,32 @@ router.get('/', async (req, res) => {
 
     try {
         const prices = await fetchPriceData(symbol);
-        const price = parseFloat(prices[0].close);
-        const date = prices[0].datetime;
+        console.log(prices);
 
+        const date = prices[0].datetime;
+        
         // Return cached data if it is database
         const cachedSignal = await getCachedSignalIfExists(symbol, date);
         if (cachedSignal) {
             const cachedData = getCachedData(cachedSignal, prices);
             return res.json(cachedData);
         }
-
+        
         const sma = calculateSMA(prices);
         const rsi = calculateRSI(prices);
         const macd = calculateMACD(prices);
         const bollinger = calculateBollingerBands(prices);
-        const { recommendation, explanation } = generateRecommendation({ rsi, macd, price, sma, bollinger });
+        const weights = parseWeights(req.query);
+        const currentPrice = parseFloat(prices[0].close);
+        const { score, recommendation, explanation } = generateRecommendation({ rsi, macd, currentPrice, sma, bollinger, weights });
 
+        // Save signal to database
         await pool.query(
             `INSERT INTO Signal (
                 symbol, date, sma, rsi, macd_value, macd_signal, bollinger_upper, 
-                bollinger_lower, current_price, recommendation, explanation
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-            [symbol, date, sma, rsi, macd.value, macd.signal, bollinger.upper, bollinger.lower, price, recommendation, explanation]
+                bollinger_lower, current_price, score, recommendation, explanation
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+            [symbol, date, sma, rsi, macd.value, macd.signal, bollinger.upper, bollinger.lower, currentPrice, score, recommendation, explanation]
         );
 
         const signalData = {
@@ -100,12 +115,13 @@ router.get('/', async (req, res) => {
             bollinger: {
                 upper: bollinger.upper,
                 lower: bollinger.lower,
-                currentPrice: price,
             },
+            currentPrice,
+            score,
             recommendation,
             explanation,
             source: 'fresh',
-            prices // Prices data for frontend's stockchart
+            prices // For charting
         };
 
         res.json(signalData);

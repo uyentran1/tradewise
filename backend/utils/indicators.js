@@ -12,13 +12,13 @@ function calculateRSI(prices, period=14) {
     for (let i = 0; i < period; i++) {
         const diff = parseFloat(prices[i].close) - parseFloat(prices[i + 1].close);
         if (diff > 0) gains += diff;
-        else losses -= diff;
+        else losses -= diff; // Convert to positive
     }
 
     const avgGain = gains / period;
     const avgLoss = losses / period;
 
-    if (avgGain === 0) return 100;
+    if (avgGain === 0) return 100; // RSI maxed - extremely overbought → potential SELL
     const rs = avgGain / avgLoss;
     return 100 - (100 / (1 + rs));
 }
@@ -26,9 +26,9 @@ function calculateRSI(prices, period=14) {
 // EMA (Exponential Moving Averages) helper for MACD
 function calculateEMA(closes, period) {
     const k = 2 / (period + 1);
-    let ema = closes[0];
+    let ema = closes[0]; // Start from the first (oldest)
     
-    for (let i = 0; i < closes.length; i++) {
+    for (let i = 1; i < closes.length; i++) {
         ema = closes[i] * k + ema * (1 - k);
     }
     
@@ -43,9 +43,23 @@ function calculateMACD(prices) {
     const ema26 = calculateEMA(closes.slice(-26), 26);
     const macd = ema12 - ema26;
 
-    // To calculate signal line (EMA 9 of MACD values over time), will need historical MACD values
-    // For now, approximate:
-    const signal = macd * 0.8;
+    // Create MACD history for signal line (need full MACD series)
+    const macdHistory = [];
+    for (let i = 0; i <= closes.length - 26; i++) {
+        const slice26 = closes.slice(i, i + 26);
+
+        if (slice26.length < 26) continue;
+
+        const ema12_i = calculateEMA(slice26.slice(-12), 12);
+        const ema26_i = calculateEMA(slice26, 26);
+        console.log("ema12_i: ", ema12_i);
+        console.log("ema26_i: ", ema26_i);
+        macdHistory.push(ema26_i - ema12_i);
+    }
+
+    console.log("MACD history: ", macdHistory);
+
+    const signal = calculateEMA(macdHistory, 9);
 
     return { value: macd, signal };
 }
