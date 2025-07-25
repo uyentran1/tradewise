@@ -5,105 +5,158 @@ import SearchBar from '../components/SearchBar';
 const HomePage = () => {
   return (
     <Layout>
+  
+
       {/* Hero Section */}
-      <section className="w-full text-center py-16 px-6 bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 relative overflow-hidden">
+      <section className="w-full text-center py-20 px-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5"></div>
+        
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-cyan-500/10 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
         <div className="relative z-10">
-          <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent py-1">
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent leading-tight">
             Empowering You with Smart Trading Signals
-          </h2>
-          <p className="text-xl mb-10 text-gray-700 max-w-2xl mx-auto">
-            Search and understand signals for any stock with confidence. Get professional-grade technical analysis made simple.
+          </h1>
+          <p className="text-xl mb-12 text-slate-300 max-w-3xl mx-auto font-medium">
+            Search and understand signals for any stock with confidence. 
           </p>
-          <div className="max-w-xl mx-auto w-full">
+          {/* <p className="text-lg mb-12 text-slate-400 max-w-2xl mx-auto">
+            Make data-driven decisions with confidence.
+          </p> */}
+          <div className="max-w-2xl mx-auto w-full">
             <SearchBar />
           </div>
         </div>
       </section>
 
+
       {/* Features */}
-      <section className="w-full bg-white py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 bg-clip-text text-transparent">
-            Why Choose Our Platform?
-          </h3>
+      <section className="w-full bg-slate-50 py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-800 mb-4">
+              Why Choose Our Platform?
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Built for traders with accuracy, speed, and comprehensive market insights.
+            </p>
+          </div>
+          
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 border border-purple-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-white">⚡</span>
+            <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">Timely Technical Signals</h4>
-              <p className="text-gray-600">Real-time analysis with RSI, MACD, SMA, and Bollinger Bands for precise market timing.</p>
+              <h3 className="text-xl font-bold text-slate-800 mb-3 text-center">Timely Technical Signals</h3>
+              <p className="text-slate-600 text-center leading-relaxed">
+                Real-time analysis with RSI, MACD, SMA, and Bollinger Bands. Get precise entry and exit signals with confidence scoring.
+              </p>
             </div>
             
-            <div className="text-center p-8 bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50 border border-purple-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-white">📊</span>
+            <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">Easy to Understand Indicators</h4>
-              <p className="text-gray-600">Complex technical analysis simplified with clear explanations and visual charts.</p>
+              <h3 className="text-xl font-bold text-slate-800 mb-3 text-center">Advanced Chart Analysis</h3>
+              <p className="text-slate-600 text-center leading-relaxed">
+                Interactive candlestick charts with technical overlays. Visualise price action and indicator relationships clearly.
+              </p>
             </div>
             
-            <div className="text-center p-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-purple-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl text-white">🎓</span>
+            <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">Beginner-Friendly Insights</h4>
-              <p className="text-gray-600">Learn as you trade with educational tooltips and detailed signal explanations.</p>
+              <h3 className="text-xl font-bold text-slate-800 mb-3 text-center">Educational Insights</h3>
+              <p className="text-slate-600 text-center leading-relaxed">
+                Learn while you trade with detailed explanations of each indicator and market conditions. Master technical analysis.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
+
+
       {/* How It Works */}
-      <section className="w-full bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-blue-50/50 py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 bg-clip-text text-transparent">
-            How It Works
-          </h3>
-          <div className="grid md:grid-cols-3 gap-8">
+      <section className="w-full bg-slate-800 py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+              Our streamlined process gets you from market data to actionable insights in seconds
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center group">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-purple-100 to-pink-100 border border-purple-200 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 relative z-10">
-                  <span className="text-4xl">🔍</span>
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm z-20">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   1
                 </div>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">Search for a Stock</h4>
-              <p className="text-gray-600">Enter any stock symbol to get instant technical analysis and trading signals.</p>
+              <h3 className="text-2xl font-bold text-white mb-4">Search Any Stock</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Enter any stock symbol to instantly access comprehensive technical analysis and real-time market data
+              </p>
             </div>
             
             <div className="text-center group">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-pink-100 to-blue-100 border border-purple-200 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 relative z-10">
-                  <span className="text-4xl">📈</span>
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-pink-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm z-20">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   2
                 </div>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">View Signal & Breakdown</h4>
-              <p className="text-gray-600">Analyze comprehensive charts with technical indicators and AI-powered insights.</p>
+              <h3 className="text-2xl font-bold text-white mb-4">Analyse Signals</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Review comprehensive technical indicators with clear buy, sell, or hold recommendations backed by data.
+              </p>
             </div>
             
             <div className="text-center group">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 border border-purple-200 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 relative z-10">
-                  <span className="text-4xl">🧠</span>
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm z-20">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   3
                 </div>
               </div>
-              <h4 className="font-bold text-lg mb-2 text-gray-800">Make Informed Decisions</h4>
-              <p className="text-gray-600">Execute trades with confidence using our clear BUY, SELL, or HOLD recommendations.</p>
+              <h3 className="text-2xl font-bold text-white mb-4">Make Informed Decisions</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Execute trades with confidence using our signal strength scoring and detailed market analysis insights.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      
       
     </Layout>
   );
