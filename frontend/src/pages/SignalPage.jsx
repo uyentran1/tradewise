@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import API from "../api";
 import Layout from "../layouts/Layout";
 import StockChart from '../components/StockChart';
+import IndicatorCard from '../components/IndicatorCard';
 
 const SignalPage = () => {
   const { symbol } = useParams();
@@ -65,8 +66,6 @@ const SignalPage = () => {
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-7xl mx-auto p-6">
           
-          
-
           {/* Stock Header */}
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 mb-8">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
@@ -78,7 +77,7 @@ const SignalPage = () => {
                     {symbol.toUpperCase()}
                   </h1>
                   <div className="px-3 py-1 bg-slate-100 rounded-full">
-                    <span className="text-sm text-slate-600 font-medium">Company Name</span>
+                    <span className="text-sm text-slate-600 font-medium">Technical Analysis</span>
                   </div>
                 </div>
                 
@@ -87,7 +86,7 @@ const SignalPage = () => {
                     ${signal.currentPrice.toFixed(2)}
                   </span>
                   
-                  {signal.priceChange && (
+                  {signal.priceChange !== undefined && (
                     <div className={`flex items-center text-xl font-semibold ${
                       signal.priceChange >= 0 
                         ? 'text-emerald-600' 
@@ -108,7 +107,7 @@ const SignalPage = () => {
               {/* Signal Summary Card */}
               <div className="bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-6 min-w-80">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-slate-700 mb-2">Trading Signal</h3>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-4">Trading Signal</h3>
                   <div className={`inline-flex items-center px-4 py-2 rounded-full text-xl font-bold ${getRecommendationStyle(signal.recommendation)}`}>
                     {getSignalIcon(signal.recommendation)}
                     <span className="ml-2">{signal.recommendation}</span>
@@ -117,53 +116,36 @@ const SignalPage = () => {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Signal Strength</span>
-                    <span className="font-bold text-slate-800">{Math.abs(signal.score || 0).toFixed(1)}/10</span>
+                    {/* <span className="text-slate-600">Signal Points</span>
+                    <span className="font-bold text-slate-800">{Math.abs(signal.score || 0).toFixed(1)}/{signal.components?.maxPossibleScore?.toFixed(1) || '8.5'}</span> */}
                   </div>
                   
                   <div className="w-full bg-slate-200 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${getScoreBarColor(signal.score)}`}
-                      style={{ width: `${Math.min(Math.abs(signal.score || 0) * 10, 100)}%` }}
+                      style={{ width: `${Math.min((Math.abs(signal.score || 0) / (signal.components?.maxPossibleScore || 8.5)) * 100, 100)}%` }}
                     ></div>
                   </div>
 
-                  {signal.confidence && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Confidence</span>
-                      <span className={`font-semibold ${getConfidenceColor(signal.confidence.level)}`}>
-                        {signal.confidence.level}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Confidence</span>
+                    <span className={`font-semibold ${getConfidenceColor(signal.confidence)}`}>
+                      {signal.confidence}%
+                    </span>
+                  </div>
 
-                  {signal.volatility && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Market Volatility</span>
-                      <span className={`font-semibold ${getVolatilityColor(signal.volatility.level)}`}>
-                        {signal.volatility.level}
-                      </span>
-                    </div>
-                  )}
+                  {/* {signal.components?.signalStrength !== undefined && (
+                    // <div className="flex justify-between items-center">
+                    //   <span className="text-slate-600">Strong Signals</span>
+                    //   <span className="font-semibold text-slate-800">
+                    //     {signal.components.signalStrength}/4
+                    //   </span>
+                    // </div>
+                  )} */}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Weight Adjustment Notification */}
-          {signal.adjustedWeights && signal.originalWeights && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
-              <div className="flex items-center gap-3">
-                <InformationCircleIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-blue-800">Adaptive Signal Weighting</h4>
-                  <p className="text-blue-700 text-sm mt-1">
-                    Indicator weights automatically adjusted for {signal.volatility?.level.toLowerCase()} volatility market conditions.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Chart Section */}
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 mb-8 overflow-hidden">
@@ -193,9 +175,9 @@ const SignalPage = () => {
             <div className="border-b border-slate-200 p-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-slate-800">Technical Indicators</h2>
-                {signal.confidence && (
+                {signal.components?.signalStrength !== undefined && (
                   <div className="text-sm text-slate-600">
-                    Signal Alignment: {signal.confidence.alignment}/4 indicators
+                    Strong Signals: {signal.components.signalStrength}/4 indicators
                   </div>
                 )}
               </div>
@@ -204,9 +186,27 @@ const SignalPage = () => {
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <IndicatorCard
+                  name="SMA"
+                  value={signal.sma?.toFixed(1) || 'N/A'}
+                  signal={getSMASignal(signal.currentPrice, signal.sma)}
+                  contribution={signal.contributions?.SMA}
+                  explanation={{
+                    title: "Simple Moving Average (SMA)",
+                    description: "SMA smooths price data to identify trends by averaging closing prices over a specific period.",
+                    interpretation: [
+                      "• Price > SMA: Potential uptrend",
+                      "• Price < SMA: Potential downtrend",
+                      "• Price near SMA: Consolidation phase",
+                      `• Current Price: ${signal.currentPrice?.toFixed(2)} vs SMA: ${signal.sma?.toFixed(2)}`
+                    ]
+                  }}
+                />
+                
+                <IndicatorCard
                   name="RSI"
-                  value={signal.rsi?.toFixed(2) || 'N/A'}
+                  value={signal.rsi?.toFixed(0) || 'N/A'}
                   signal={getRSISignal(signal.rsi)}
+                  contribution={signal.contributions?.RSI}
                   explanation={{
                     title: "Relative Strength Index (RSI)",
                     description: "RSI measures the speed and change of price movements on a scale of 0-100.",
@@ -223,6 +223,7 @@ const SignalPage = () => {
                   name="MACD"
                   value={signal.macd?.value?.toFixed(4) || 'N/A'}
                   signal={getMACDSignal(signal.macd)}
+                  contribution={signal.contributions?.MACD}
                   explanation={{
                     title: "Moving Average Convergence Divergence (MACD)",
                     description: "MACD shows the relationship between two moving averages and helps identify momentum changes.",
@@ -235,26 +236,12 @@ const SignalPage = () => {
                   }}
                 />
 
-                <IndicatorCard
-                  name="Simple Moving Average"
-                  value={signal.sma?.toFixed(2) || 'N/A'}
-                  signal={getSMASignal(signal.currentPrice, signal.sma)}
-                  explanation={{
-                    title: "Simple Moving Average (SMA)",
-                    description: "SMA smooths price data to identify trends by averaging closing prices over a specific period.",
-                    interpretation: [
-                      "• Price > SMA: Potential uptrend",
-                      "• Price < SMA: Potential downtrend",
-                      "• Price near SMA: Consolidation phase",
-                      `• Current Price: ${signal.currentPrice?.toFixed(2)} vs SMA: ${signal.sma?.toFixed(2)}`
-                    ]
-                  }}
-                />
 
                 <IndicatorCard
                   name="Bollinger Bands"
-                  value={`${signal.bollinger?.upper?.toFixed(2) || 'N/A'} / ${signal.bollinger?.lower?.toFixed(2) || 'N/A'}`}
+                  value={`${signal.bollinger?.lower?.toFixed(2) || 'N/A'} - ${signal.bollinger?.upper?.toFixed(2) || 'N/A'}`}
                   signal={getBollingerSignal(signal.currentPrice, signal.bollinger)}
+                  contribution={signal.contributions?.Bollinger}
                   explanation={{
                     title: "Bollinger Bands",
                     description: "Bollinger Bands consist of upper and lower bands around a moving average, indicating volatility and potential support/resistance levels.",
@@ -263,7 +250,7 @@ const SignalPage = () => {
                       "• Price near Lower Band: Potentially oversold",
                       "• Narrow bands: Low volatility",
                       "• Wide bands: High volatility",
-                      `• Current: ${signal.currentPrice?.toFixed(2)} (Upper: ${signal.bollinger?.upper?.toFixed(2)}, Lower: ${signal.bollinger?.lower?.toFixed(2)})`
+                      `• Current: ${signal.currentPrice?.toFixed(1)} (Upper: ${signal.bollinger?.upper?.toFixed(1)}, Lower: ${signal.bollinger?.lower?.toFixed(2)})`
                     ]
                   }}
                 />
@@ -280,7 +267,7 @@ const SignalPage = () => {
               {signal.explanation && signal.explanation.length > 0 ? (
                 <div className="space-y-3">
                   {signal.explanation.map((line, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div key={index} className="flex items-start gap-3 rounded-lg">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                       <p className="text-slate-700 leading-relaxed">{line}</p>
                     </div>
@@ -291,7 +278,7 @@ const SignalPage = () => {
               )}
 
               {/* Signal Contributions Breakdown */}
-              {signal.contributions && (
+              {signal.contributions && Object.keys(signal.contributions).length > 0 && (
                 <div className="mt-8 p-6 bg-slate-50 rounded-xl">
                   <h3 className="font-bold text-slate-800 mb-4">Signal Contribution Breakdown</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -311,65 +298,26 @@ const SignalPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Weight Distribution */}
+              {signal.components?.weightDistribution && (
+                <div className="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
+                  <h3 className="font-bold text-blue-800 mb-4">Indicator Weight Distribution</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(signal.components.weightDistribution).map(([indicator, weight]) => (
+                      <div key={indicator} className="text-center p-3 bg-white rounded-lg border border-blue-200">
+                        <div className="text-lg font-bold text-blue-800">{weight}</div>
+                        <div className="text-sm text-blue-600 uppercase">{indicator}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </Layout>
-  );
-};
-
-// Enhanced Indicator Card Component
-const IndicatorCard = ({ name, value, signal, explanation }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const signalStyles = {
-    BUY: "bg-emerald-100 text-emerald-700 border-emerald-300",
-    SELL: "bg-red-100 text-red-700 border-red-300",
-    HOLD: "bg-amber-100 text-amber-700 border-amber-300",
-    NEUTRAL: "bg-slate-100 text-slate-700 border-slate-300",
-  };
-
-  return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-bold text-slate-800">{name}</h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${signalStyles[signal] || signalStyles.NEUTRAL}`}>
-              {signal}
-            </span>
-          </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-slate-500 hover:text-blue-600 transition-colors"
-            aria-label={isExpanded ? "Collapse explanation" : "Expand explanation"}
-          >
-            {isExpanded ? (
-              <ChevronUpIcon className="w-5 h-5" />
-            ) : (
-              <ChevronDownIcon className="w-5 h-5" />
-            )}
-          </button>
-        </div>
-        
-        <div className="text-2xl font-mono font-bold text-slate-800">{value}</div>
-      </div>
-
-      {/* Educational Dropdown */}
-      {isExpanded && (
-        <div className="border-t border-slate-200 bg-white p-6">
-          <h4 className="font-bold text-slate-800 mb-3">{explanation.title}</h4>
-          <p className="text-slate-600 mb-4 leading-relaxed">{explanation.description}</p>
-          <div className="space-y-2">
-            <h5 className="font-semibold text-slate-700">How to interpret:</h5>
-            {explanation.interpretation.map((item, index) => (
-              <div key={index} className="text-sm text-slate-600 leading-relaxed">{item}</div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
   );
 };
 
@@ -379,9 +327,13 @@ const getRecommendationStyle = (recommendation) => {
     'BUY': 'bg-emerald-100 text-emerald-700 border-emerald-300',
     'Buy': 'bg-emerald-100 text-emerald-700 border-emerald-300',
     'Strong Buy': 'bg-emerald-200 text-emerald-800 border-emerald-400',
+    'Moderate Buy': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+    'Weak Buy': 'bg-emerald-50 text-emerald-600 border-emerald-200',
     'SELL': 'bg-red-100 text-red-700 border-red-300',
     'Sell': 'bg-red-100 text-red-700 border-red-300',
     'Strong Sell': 'bg-red-200 text-red-800 border-red-400',
+    'Moderate Sell': 'bg-red-100 text-red-700 border-red-300',
+    'Weak Sell': 'bg-red-50 text-red-600 border-red-200',
     'HOLD': 'bg-amber-100 text-amber-700 border-amber-300',
     'Hold': 'bg-amber-100 text-amber-700 border-amber-300',
   };
@@ -399,34 +351,23 @@ const getSignalIcon = (recommendation) => {
 };
 
 const getScoreBarColor = (score) => {
-  if (Math.abs(score) >= 7) return 'bg-gradient-to-r from-emerald-500 to-emerald-600';
-  if (Math.abs(score) >= 4) return 'bg-gradient-to-r from-amber-500 to-amber-600';
+  if (Math.abs(score) >= 6) return 'bg-gradient-to-r from-emerald-500 to-emerald-600';
+  if (Math.abs(score) >= 3) return 'bg-gradient-to-r from-amber-500 to-amber-600';
   return 'bg-gradient-to-r from-red-500 to-red-600';
 };
 
-const getConfidenceColor = (level) => {
-  const colors = {
-    'HIGH': 'text-emerald-700',
-    'MEDIUM': 'text-amber-700',
-    'LOW': 'text-slate-600'
-  };
-  return colors[level] || 'text-slate-600';
+const getConfidenceColor = (confidence) => {
+  if (confidence >= 80) return 'text-emerald-700';
+  if (confidence >= 60) return 'text-amber-700';
+  if (confidence >= 40) return 'text-orange-700';
+  return 'text-red-700';
 };
 
-const getVolatilityColor = (level) => {
-  const colors = {
-    'HIGH': 'text-red-700',
-    'MEDIUM': 'text-amber-700',
-    'LOW': 'text-emerald-700'
-  };
-  return colors[level] || 'text-slate-600';
-};
-
-// Signal interpretation functions (keeping your existing logic)
+// Signal interpretation functions
 const getRSISignal = (rsi) => {
   if (!rsi) return 'NEUTRAL';
-  if (rsi > 70) return 'SELL';
-  if (rsi < 30) return 'BUY';
+  if (rsi > 65) return 'SELL';
+  if (rsi < 35) return 'BUY';
   return 'HOLD';
 };
 

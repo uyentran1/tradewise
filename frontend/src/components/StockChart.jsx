@@ -33,7 +33,6 @@ ChartJS.register(
 const StockChart = ({ ohlc, sma, signal }) => {
   // Validation
   if (!ohlc || !Array.isArray(ohlc) || ohlc.length === 0) {
-    console.log("Invalid OHLC data:", ohlc);
     return (
       <div className="h-96 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200">
         <div className="text-center">
@@ -47,7 +46,6 @@ const StockChart = ({ ohlc, sma, signal }) => {
   }
 
   if (!signal) {
-    console.log("No signal data provided");
     return (
       <div className="h-96 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200">
         <div className="text-center">
@@ -60,7 +58,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
     );
   }
 
-  // Create candlestick data (data is already sorted from SignalPage)
+  // Create candlestick data
   const candlestickData = ohlc.map((p) => ({
     x: new Date(p.datetime).getTime(),
     o: parseFloat(p.open),
@@ -73,13 +71,11 @@ const StockChart = ({ ohlc, sma, signal }) => {
   let smaData = [];
   if (sma && Array.isArray(sma) && sma.length > 0) {
     if (typeof sma[0] === "object" && sma[0].datetime && sma[0].value) {
-      // SMA data has datetime and value properties
       smaData = sma.map((point) => ({
         x: new Date(point.datetime).getTime(),
         y: point.value,
       }));
     } else if (typeof sma[0] === "number") {
-      // SMA data is just array of numbers, map to corresponding OHLC dates
       smaData = sma
         .map((value, i) => ({
           x: new Date(ohlc[ohlc.length - sma.length + i]?.datetime).getTime(),
@@ -89,33 +85,68 @@ const StockChart = ({ ohlc, sma, signal }) => {
     }
   }
 
-  // Create Bollinger Bands data
-  const bollingerUpperData = signal.bollinger?.upper
-    ? ohlc.map((p) => ({
-        x: new Date(p.datetime).getTime(),
-        y: signal.bollinger.upper,
-      }))
-    : [];
+  // Create Moving Bollinger Bands data from the array
+  let bollingerUpperData = [];
+  let bollingerLowerData = [];
 
-  const bollingerLowerData = signal.bollinger?.lower
-    ? ohlc.map((p) => ({
-        x: new Date(p.datetime).getTime(),
-        y: signal.bollinger.lower,
-      }))
-    : [];
+  if (signal.bollinger?.array && Array.isArray(signal.bollinger.array)) {
+    bollingerUpperData = signal.bollinger.array.map((bb) => ({
+      x: new Date(bb.datetime).getTime(),
+      y: bb.upper,
+    }));
 
-  // Get min and max values for proper scaling
-  const allValues = [
+    bollingerLowerData = signal.bollinger.array.map((bb) => ({
+      x: new Date(bb.datetime).getTime(),
+      y: bb.lower,
+    }));
+  } else if (signal.bollinger?.upper && signal.bollinger?.lower) {
+    bollingerUpperData = ohlc.map((p) => ({
+      x: new Date(p.datetime).getTime(),
+      y: signal.bollinger.upper,
+    }));
+
+    bollingerLowerData = ohlc.map((p) => ({
+      x: new Date(p.datetime).getTime(),
+      y: signal.bollinger.lower,
+    }));
+  }
+
+  // Create MACD data from arrays if available
+  let macdLineData = [];
+  let macdSignalData = [];
+
+  if (signal.macd?.macdHistory && signal.macd?.signalHistory) {
+    macdLineData = signal.macd.macdHistory.map((macdValue, index) => ({
+      x: new Date(ohlc[25 + index]?.datetime).getTime(),
+      y: macdValue,
+    })).filter(point => !isNaN(point.x) && !isNaN(point.y));
+
+    macdSignalData = signal.macd.signalHistory.map((signalValue, index) => ({
+      x: new Date(ohlc[25 + 8 + index]?.datetime).getTime(),
+      y: signalValue,
+    })).filter(point => !isNaN(point.x) && !isNaN(point.y));
+  }
+
+  // Get min and max values for price axis scaling
+  const allPriceValues = [
     ...candlestickData.flatMap((d) => [d.o, d.h, d.l, d.c]),
     ...smaData.map((d) => d.y).filter((y) => y !== null && !isNaN(y)),
+    ...bollingerUpperData.map((d) => d.y).filter((y) => y !== null && !isNaN(y)),
+    ...bollingerLowerData.map((d) => d.y).filter((y) => y !== null && !isNaN(y)),
   ];
 
-  if (signal.bollinger?.upper) allValues.push(signal.bollinger.upper);
-  if (signal.bollinger?.lower) allValues.push(signal.bollinger.lower);
+  const minPriceValue = Math.min(...allPriceValues);
+  const maxPriceValue = Math.max(...allPriceValues);
+  const pricePadding = (maxPriceValue - minPriceValue) * 0.1;
 
-  const minValue = Math.min(...allValues);
-  const maxValue = Math.max(...allValues);
-  const padding = (maxValue - minValue) * 0.1;
+  // Get MACD range for proper scaling
+  const allMacdValues = [
+    ...macdLineData.map(d => d.y).filter(y => !isNaN(y)),
+    ...macdSignalData.map(d => d.y).filter(y => !isNaN(y))
+  ];
+  const minMacdValue = allMacdValues.length > 0 ? Math.min(...allMacdValues) : -1;
+  const maxMacdValue = allMacdValues.length > 0 ? Math.max(...allMacdValues) : 1;
+  const macdPadding = Math.abs(maxMacdValue - minMacdValue) * 0.1;
 
   const datasets = [
     {
@@ -123,9 +154,9 @@ const StockChart = ({ ohlc, sma, signal }) => {
       data: candlestickData,
       type: "candlestick",
       borderColor: {
-        up: "#10b981", // Emerald green
-        down: "#ef4444", // Red
-        unchanged: "#64748b", // Slate
+        up: "#10b981",
+        down: "#ef4444",
+        unchanged: "#64748b",
       },
       backgroundColor: {
         up: "rgba(16, 185, 129, 0.8)",
@@ -136,13 +167,13 @@ const StockChart = ({ ohlc, sma, signal }) => {
     },
   ];
 
-  // Add SMA line if data exists
+  // Add SMA line
   if (smaData.length > 0) {
     datasets.push({
       label: "SMA (20)",
       data: smaData,
       type: "line",
-      borderColor: "#3b82f6", // Professional blue
+      borderColor: "#3b82f6",
       backgroundColor: "rgba(59, 130, 246, 0.1)",
       borderWidth: 2,
       pointRadius: 0,
@@ -153,13 +184,13 @@ const StockChart = ({ ohlc, sma, signal }) => {
     });
   }
 
-  // Add Bollinger Bands if they exist
+  // Add Moving Bollinger Bands
   if (bollingerUpperData.length > 0) {
     datasets.push({
       label: "Bollinger Upper",
       data: bollingerUpperData,
       type: "line",
-      borderColor: "#8b5cf6", // Purple
+      borderColor: "#8b5cf6",
       backgroundColor: "rgba(139, 92, 246, 0.1)",
       borderWidth: 1,
       borderDash: [5, 5],
@@ -174,17 +205,17 @@ const StockChart = ({ ohlc, sma, signal }) => {
       label: "Bollinger Lower",
       data: bollingerLowerData,
       type: "line",
-      borderColor: "#8b5cf6", // Purple
+      borderColor: "#8b5cf6",
       backgroundColor: "rgba(139, 92, 246, 0.05)",
       borderWidth: 1,
       borderDash: [5, 5],
       pointRadius: 0,
-      fill: "+1", // Fill between upper and lower bands
+      fill: "+1",
       yAxisID: "price",
     });
   }
 
-  // Add RSI as a separate dataset on secondary y-axis
+  // Add RSI data
   if (signal.rsi) {
     const rsiData = ohlc.map((p) => ({
       x: new Date(p.datetime).getTime(),
@@ -195,54 +226,45 @@ const StockChart = ({ ohlc, sma, signal }) => {
       label: `RSI (${signal.rsi.toFixed(1)})`,
       data: rsiData,
       type: "line",
-      borderColor: "#f59e0b", // Amber
+      borderColor: "#f59e0b",
       backgroundColor: "rgba(245, 158, 11, 0.1)",
       borderWidth: 2,
       pointRadius: 0,
       fill: false,
       yAxisID: "rsi",
-      hidden: true, // Start hidden since RSI scale is different
+      hidden: true,
     });
   }
 
-  // Add MACD as separate datasets on secondary y-axis
-  if (signal.macd) {
-    const macdValueData = ohlc.map((p) => ({
-      x: new Date(p.datetime).getTime(),
-      y: signal.macd.value,
-    }));
+  // Add MACD data
+  if (macdLineData.length > 0) {
+    datasets.push({
+      label: `MACD Line`,
+      data: macdLineData,
+      type: "line",
+      borderColor: "#06b6d4",
+      backgroundColor: "rgba(6, 182, 212, 0.1)",
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false,
+      yAxisID: "macd",
+      hidden: true,
+    });
+  }
 
-    const macdSignalData = ohlc.map((p) => ({
-      x: new Date(p.datetime).getTime(),
-      y: signal.macd.signal,
-    }));
-
-    datasets.push(
-      {
-        label: `MACD Value (${signal.macd.value.toFixed(3)})`,
-        data: macdValueData,
-        type: "line",
-        borderColor: "#06b6d4", // Cyan
-        backgroundColor: "rgba(6, 182, 212, 0.1)",
-        borderWidth: 2,
-        pointRadius: 0,
-        fill: false,
-        yAxisID: "macd",
-        hidden: true, // Start hidden since MACD scale is different
-      },
-      {
-        label: `MACD Signal (${signal.macd.signal.toFixed(3)})`,
-        data: macdSignalData,
-        type: "line",
-        borderColor: "#ef4444", // Red
-        backgroundColor: "rgba(239, 68, 68, 0.1)",
-        borderWidth: 2,
-        pointRadius: 0,
-        fill: false,
-        yAxisID: "macd",
-        hidden: true, // Start hidden since MACD scale is different
-      }
-    );
+  if (macdSignalData.length > 0) {
+    datasets.push({
+      label: `MACD Signal`,
+      data: macdSignalData,
+      type: "line",
+      borderColor: "#ef4444",
+      backgroundColor: "rgba(239, 68, 68, 0.1)",
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false,
+      yAxisID: "macd",
+      hidden: true,
+    });
   }
 
   const data = { datasets };
@@ -253,6 +275,11 @@ const StockChart = ({ ohlc, sma, signal }) => {
     interaction: {
       intersect: false,
       mode: "index",
+    },
+    layout: {
+      padding: {
+        right: 60, // Extra padding for right axes
+      },
     },
     scales: {
       x: {
@@ -267,10 +294,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
           display: true,
           text: "Date",
           color: "#64748b",
-          font: {
-            size: 12,
-            weight: "500",
-          },
+          font: { size: 12, weight: "500" },
         },
         grid: {
           color: "rgba(148, 163, 184, 0.1)",
@@ -280,24 +304,20 @@ const StockChart = ({ ohlc, sma, signal }) => {
           color: "#64748b",
           maxTicksLimit: 8,
         },
-        border: {
-          display: false,
-        },
+        border: { display: false },
       },
+      // PRIMARY Y-AXIS (LEFT) - Price, SMA, Bollinger Bands
       price: {
         type: "linear",
         position: "left",
         beginAtZero: false,
-        min: Math.max(0, minValue - padding),
-        max: maxValue + padding,
+        min: Math.max(0, minPriceValue - pricePadding),
+        max: maxPriceValue + pricePadding,
         title: {
           display: true,
           text: "Price ($)",
           color: "#64748b",
-          font: {
-            size: 12,
-            weight: "500",
-          },
+          font: { size: 12, weight: "500" },
         },
         grid: {
           color: "rgba(148, 163, 184, 0.1)",
@@ -309,10 +329,9 @@ const StockChart = ({ ohlc, sma, signal }) => {
             return "$" + value.toFixed(2);
           },
         },
-        border: {
-          display: false,
-        },
+        border: { display: false },
       },
+      // SECONDARY Y-AXIS (RIGHT) - RSI only
       rsi: {
         type: "linear",
         position: "right",
@@ -320,52 +339,50 @@ const StockChart = ({ ohlc, sma, signal }) => {
         max: 100,
         title: {
           display: true,
-          text: "RSI",
+          text: "RSI (0-100)",
           color: "#f59e0b",
-          font: {
-            size: 12,
-            weight: "500",
-          },
+          font: { size: 11, weight: "500" },
         },
         grid: {
-          drawOnChartArea: false,
+          drawOnChartArea: false, // Don't draw grid lines across chart
           color: "rgba(245, 158, 11, 0.2)",
         },
         ticks: {
           color: "#f59e0b",
+          stepSize: 25,
+          font: { size: 10 },
           callback: function (value) {
             return value.toFixed(0);
           },
         },
-        border: {
-          display: false,
-        },
+        border: { display: false },
       },
+      // THIRD Y-AXIS (RIGHT, OFFSET) - MACD only
       macd: {
         type: "linear",
         position: "right",
+        offset: true, // This creates separation from RSI axis
+        min: minMacdValue - macdPadding,
+        max: maxMacdValue + macdPadding,
         title: {
           display: true,
           text: "MACD",
-          color: "#06b6d4",
-          font: {
-            size: 12,
-            weight: "500",
-          },
+          color: "#06b6d4", 
+          font: { size: 11, weight: "500" },
         },
         grid: {
-          drawOnChartArea: false,
+          drawOnChartArea: false, // Don't draw grid lines across chart
           color: "rgba(6, 182, 212, 0.2)",
         },
         ticks: {
           color: "#06b6d4",
+          maxTicksLimit: 5,
+          font: { size: 10 },
           callback: function (value) {
             return value.toFixed(3);
           },
         },
-        border: {
-          display: false,
-        },
+        border: { display: false },
       },
     },
     plugins: {
@@ -374,23 +391,27 @@ const StockChart = ({ ohlc, sma, signal }) => {
         position: "top",
         labels: {
           usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-            weight: "500",
-          },
+          padding: 15,
+          font: { size: 11, weight: "500" },
           color: "#475569",
-          filter: function (item) {
-            return true; // Show all legend items
+          generateLabels: function(chart) {
+            const originalLabels = ChartJS.defaults.plugins.legend.labels.generateLabels(chart);
+            // Add axis info to legend labels for clarity
+            return originalLabels.map(label => {
+              if (label.text.includes('RSI')) {
+                label.text += ' (Right)';
+              } else if (label.text.includes('MACD')) {
+                label.text += ' (Right)';
+              }
+              return label;
+            });
           },
         },
         onClick: function (e, legendItem, legend) {
           const index = legendItem.datasetIndex;
           const chart = legend.chart;
           const meta = chart.getDatasetMeta(index);
-
-          meta.hidden =
-            meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+          meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
           chart.update();
         },
       },
@@ -404,13 +425,8 @@ const StockChart = ({ ohlc, sma, signal }) => {
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
-        titleFont: {
-          size: 14,
-          weight: "600",
-        },
-        bodyFont: {
-          size: 13,
-        },
+        titleFont: { size: 14, weight: "600" },
+        bodyFont: { size: 13 },
         callbacks: {
           label: function (context) {
             const datasetLabel = context.dataset.label || "";
@@ -423,13 +439,13 @@ const StockChart = ({ ohlc, sma, signal }) => {
                 `Close: $${data.c.toFixed(2)}`,
               ];
             } else if (datasetLabel.includes("RSI")) {
-              return `${datasetLabel}: ${context.parsed.y.toFixed(1)}`;
+              return `RSI: ${context.parsed.y.toFixed(1)} (Right Axis)`;
             } else if (datasetLabel.includes("MACD")) {
-              return `${datasetLabel}: ${context.parsed.y.toFixed(4)}`;
+              return `${datasetLabel}: ${context.parsed.y.toFixed(4)} (Right Axis)`;
             } else if (datasetLabel.includes("Bollinger")) {
-              return `${datasetLabel}: $${context.parsed.y.toFixed(2)}`;
+              return `${datasetLabel}: ${context.parsed.y.toFixed(2)}`;
             } else {
-              return `${datasetLabel}: $${context.parsed.y.toFixed(2)}`;
+              return `${datasetLabel}: ${context.parsed.y.toFixed(2)}`;
             }
           },
         },
@@ -446,7 +462,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
           </h3>
           <div className="text-sm text-slate-500 text-right">
             <p className="font-medium">Click legend to toggle indicators</p>
-            <p className="text-xs">RSI & MACD hidden by default</p>
+            <p className="text-xs">RSI & MACD on separate right axes (hidden by default)</p>
           </div>
         </div>
       </div>
@@ -507,10 +523,10 @@ const StockChart = ({ ohlc, sma, signal }) => {
               <strong className="text-slate-700">Bollinger Bands</strong>
             </div>
             <div className="text-sm font-semibold text-slate-800">
-              ${signal.bollinger?.lower.toFixed(2)} - ${signal.bollinger?.upper.toFixed(2)}
+              ${signal.bollinger?.lower?.toFixed(2)} - ${signal.bollinger?.upper?.toFixed(2)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              Volatility channel
+              Current range
             </div>
           </div>
         </div>
