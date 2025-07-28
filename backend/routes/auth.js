@@ -3,6 +3,9 @@ const router = express.Router();
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
@@ -65,6 +68,63 @@ router.post('/login', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error while trying to log in.' });
+    }
+});
+
+// POST /auth/google
+router.post('/google', async (req, res) => {
+    const { credential } = req.body;
+
+    if (!credential) {
+        return res.status(400).json({ error: 'Google credential is required.' });
+    }
+
+    try {
+        // Verify Google token
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name: fullName, picture: avatarUrl } = payload;
+
+        // Check if user exists
+        let userQuery = await pool.query('SELECT * FROM "User" WHERE google_id = $1 OR email = $2', [googleId, email]);
+        let user = userQuery.rows[0];
+
+        if (user) {
+            // Update existing user with Google info if not set
+            if (!user.google_id) {
+                await pool.query(
+                    'UPDATE "User" SET google_id = $1, provider = $2, avatar_url = $3 WHERE id = $4',
+                    [googleId, 'google', avatarUrl, user.id]
+                );
+            }
+        } else {
+            // Create new user
+            const newUserQuery = await pool.query(
+                'INSERT INTO "User" (full_name, email, google_id, provider, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                [fullName, email, googleId, 'google', avatarUrl]
+            );
+            user = newUserQuery.rows[0];
+        }
+
+        // Generate JWT (same format as regular login)
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                email: user.email,
+                fullName: user.full_name,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+        );
+
+        res.json({ token, user: { id: user.id, email: user.email } });
+    } catch (err) {
+        console.error('Google auth error:', err);
+        res.status(500).json({ error: 'Google authentication failed.' });
     }
 });
 

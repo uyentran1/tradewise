@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const pool = require('./db');
+
 const signalRoute = require('./routes/signals');
 const searchRoute = require('./routes/search');
 const authRoute = require('./routes/auth');
