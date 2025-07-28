@@ -52,7 +52,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Layout showSearch={false} hideLink="login">
+    <Layout hideLink="login">
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex justify-center items-center py-12 px-6">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-blue-500/5"></div>

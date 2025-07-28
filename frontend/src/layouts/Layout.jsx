@@ -17,7 +17,7 @@ const Layout = ({ children, showSearch = true, hideLink }) => {
             </div>
             
             {/* Header */}
-            <Header hideLink={hideLink} />
+            <Header hideLink={hideLink} showSearch={showSearch} />
             
             {/* Main Content */}
             <main className="flex-1 relative z-10">
