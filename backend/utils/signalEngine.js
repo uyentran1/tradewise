@@ -173,12 +173,8 @@ function generateRecommendation(indicators) {
     const confidence = absScore / maxScoreAbs;
 
     let recommendation;
-    if (confidence >= 0.8) {
-        recommendation = score > 0 ? "Strong Buy" : "Strong Sell";
-    } else if (confidence >= 0.6) {
-        recommendation = score > 0 ? "Moderate Buy" : "Moderate Sell";
-    } else if (confidence >= 0.4) {
-        recommendation = score > 0 ? "Weak Buy" : "Weak Sell";
+    if (confidence >= 0.4) {
+        recommendation = score > 0 ? "Buy" : "Sell";
     } else {
         recommendation = "Hold";
     }
