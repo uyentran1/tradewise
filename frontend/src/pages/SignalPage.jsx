@@ -1,16 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, BookmarkIcon } from "@heroicons/react/24/outline";
+import { BookmarkIcon as BookmarkSolidIcon, HeartIcon } from "@heroicons/react/24/solid";
 import API from "../api";
 import Layout from "../layouts/Layout";
 import StockChart from '../components/StockChart';
 import IndicatorCard from '../components/IndicatorCard';
+import { AuthContext } from '../context/AuthContext';
 
 const SignalPage = () => {
   const { symbol } = useParams();
+  const { user } = useContext(AuthContext); // Get user authentication state
   const [signal, setSignal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // States for save signal functionality
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [notes, setNotes] = useState('');
+  
+  // States for watchlist functionality  
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   useEffect(() => {
     const fetchSignal = async () => {
@@ -28,6 +40,75 @@ const SignalPage = () => {
 
     fetchSignal();
   }, [symbol]);
+
+  // Check if symbol is in watchlist when user is logged in
+  useEffect(() => {
+    const checkWatchlist = async () => {
+      if (user && symbol) {
+        try {
+          const res = await API.get(`/watchlist/check/${symbol}`);
+          setInWatchlist(res.data.inWatchlist);
+        } catch (err) {
+          console.error('Error checking watchlist:', err);
+        }
+      }
+    };
+    checkWatchlist();
+  }, [user, symbol]);
+
+  // Function to save signal for future review
+  const handleSaveSignal = async () => {
+    if (!user) {
+      alert('Please log in to save signals');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await API.post('/saved-signals', {
+        symbol,
+        signalData: signal, // Save complete signal data
+        notes: notes.trim() || null
+      });
+      
+      setSaveSuccess(true);
+      setNotes(''); // Clear notes after successful save
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error saving signal:', err);
+      alert('Failed to save signal. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Function to toggle watchlist status
+  const handleWatchlistToggle = async () => {
+    if (!user) {
+      alert('Please log in to use watchlist');
+      return;
+    }
+
+    setWatchlistLoading(true);
+    try {
+      if (inWatchlist) {
+        // Remove from watchlist
+        await API.delete(`/watchlist/${symbol}`);
+        setInWatchlist(false);
+      } else {
+        // Add to watchlist
+        await API.post('/watchlist', { symbol });
+        setInWatchlist(true);
+      }
+    } catch (err) {
+      console.error('Error updating watchlist:', err);
+      alert('Failed to update watchlist. Please try again.');
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
 
   if (loading) return (
     <Layout>
@@ -109,7 +190,7 @@ const SignalPage = () => {
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-semibold text-slate-700 mb-4">Trading Signal</h3>
                   <div className={`inline-flex items-center px-4 py-2 rounded-full text-xl font-bold ${getRecommendationStyle(signal.recommendation)}`}>
-                    {getSignalIcon(signal.recommendation)}
+                    {/* {getSignalIcon(signal.recommendation)} */}
                     <span className="ml-2">{signal.recommendation}</span>
                   </div>
                 </div>
@@ -145,6 +226,88 @@ const SignalPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Action Buttons - Only show if user is logged in */}
+            {user && (
+              <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                {/* Save Signal Section */}
+                <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <BookmarkIcon className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-semibold text-slate-800">Save Signal</h3>
+                  </div>
+                  
+                  {/* Notes input */}
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add notes about this signal (optional)..."
+                    className="w-full p-3 border border-slate-300 rounded-lg resize-none text-sm mb-3"
+                    rows="2"
+                  />
+                  
+                  <button
+                    onClick={handleSaveSignal}
+                    disabled={isSaving}
+                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkIcon className="w-4 h-4" />
+                        Save for Review
+                      </>
+                    )}
+                  </button>
+                  
+                  {/* Success message */}
+                  {saveSuccess && (
+                    <div className="mt-2 p-2 bg-green-100 text-green-800 rounded-lg text-sm flex items-center gap-2">
+                      <BookmarkSolidIcon className="w-4 h-4" />
+                      Signal saved successfully!
+                    </div>
+                  )}
+                </div>
+
+                {/* Watchlist Section */}
+                <div className="flex-1 bg-white rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <HeartIcon className={`w-5 h-5 ${inWatchlist ? 'text-red-600' : 'text-slate-400'}`} />
+                    <h3 className="font-semibold text-slate-800">Watchlist</h3>
+                  </div>
+                  
+                  <p className="text-slate-600 text-sm mb-3">
+                    {inWatchlist ? 'This stock is in your watchlist' : 'Monitor this stock regularly'}
+                  </p>
+                  
+                  <button
+                    onClick={handleWatchlistToggle}
+                    disabled={watchlistLoading}
+                    className={`w-full px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                      inWatchlist
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'bg-slate-600 text-white hover:bg-slate-700'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {watchlistLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <HeartIcon className="w-4 h-4" />
+                        {inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Chart Section */}

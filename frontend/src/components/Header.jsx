@@ -36,7 +36,7 @@ const Header = ({ hideLink, showSearch=true }) => {
 
                 {/* Header Search Bar - Show only if not HomePage and showSearch is true */}
                 {showSearch && !isHomePage &&!isAuthPage && (
-                    <div className="hidden md:block w-70 ml-140 mr-4">
+                    <div className="hidden md:block w-70 ml-auto mr-4">
                         <form onSubmit={handleSearch} className="relative">
                             <div className="relative">
                                 <input
@@ -82,10 +82,10 @@ const Header = ({ hideLink, showSearch=true }) => {
                         </Link>
                         
                         <Link 
-                            to="/watchlist" 
+                            to="/dashboard" 
                             className="text-slate-600 hover:text-blue-600 font-medium transition-colors duration-200 hover:underline decoration-blue-300"
                         >
-                            Watchlist
+                            Dashboard
                         </Link>
                         
                         <button
