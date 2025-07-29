@@ -67,64 +67,118 @@ const StockChart = ({ ohlc, sma, signal }) => {
     c: parseFloat(p.close),
   }));
 
-  // Properly map SMA data
-  let smaData = [];
+  // Debug: Log data alignment info
+  console.log('DEBUG: Chart Data Alignment:');
+  console.log('- OHLC data points:', candlestickData.length);
+  console.log('- Date range:', new Date(candlestickData[0]?.x).toISOString().split('T')[0], 'to', new Date(candlestickData[candlestickData.length-1]?.x).toISOString().split('T')[0]);
+  
+  // Log first and last few dates for debugging
+  console.log('- First 3 OHLC dates:', candlestickData.slice(0, 3).map(d => new Date(d.x).toISOString().split('T')[0]));
+  console.log('- Last 3 OHLC dates:', candlestickData.slice(-3).map(d => new Date(d.x).toISOString().split('T')[0]));
+
+  // Create SMA data aligned with OHLC dates (null values for missing dates)
+  let smaData = candlestickData.map(ohlcPoint => ({ x: ohlcPoint.x, y: null })); // Initialize with nulls
+  
   if (sma && Array.isArray(sma) && sma.length > 0) {
-    if (typeof sma[0] === "object" && sma[0].datetime && sma[0].value) {
-      smaData = sma.map((point) => ({
-        x: new Date(point.datetime).getTime(),
-        y: point.value,
-      }));
+    if (typeof sma[0] === "object" && sma[0].datetime && sma[0].value !== undefined) {
+      // SMA array has datetime - match with OHLC dates
+      sma.forEach(smaPoint => {
+        const smaTime = new Date(smaPoint.datetime).getTime();
+        const ohlcIndex = candlestickData.findIndex(ohlc => ohlc.x === smaTime);
+        if (ohlcIndex !== -1) {
+          smaData[ohlcIndex] = { x: smaTime, y: smaPoint.value };
+        }
+      });
+      console.log('DEBUG: SMA using datetime array, aligned with OHLC');
     } else if (typeof sma[0] === "number") {
-      smaData = sma
-        .map((value, i) => ({
-          x: new Date(ohlc[ohlc.length - sma.length + i]?.datetime).getTime(),
-          y: value,
-        }))
-        .filter((point) => !isNaN(point.x) && !isNaN(point.y));
+      // SMA is just numbers - align starting from day 20 (index 19)
+      const smaStartIndex = 19; // 20-day SMA starts from day 20
+      sma.forEach((value, i) => {
+        const ohlcIndex = smaStartIndex + i;
+        if (ohlcIndex < candlestickData.length && value !== null && value !== undefined) {
+          smaData[ohlcIndex] = { x: candlestickData[ohlcIndex].x, y: value };
+        }
+      });
+      console.log('DEBUG: SMA using number array, aligned with OHLC');
     }
+    
+    const validSmaPoints = smaData.filter(point => point.y !== null).length;
+    console.log(`DEBUG: SMA total points: ${smaData.length}, valid points: ${validSmaPoints}`);
   }
 
-  // Create Moving Bollinger Bands data from the array
-  let bollingerUpperData = [];
-  let bollingerLowerData = [];
+  // Create Bollinger Bands data aligned with OHLC dates (null values for missing dates)
+  let bollingerUpperData = candlestickData.map(ohlcPoint => ({ x: ohlcPoint.x, y: null }));
+  let bollingerLowerData = candlestickData.map(ohlcPoint => ({ x: ohlcPoint.x, y: null }));
 
   if (signal.bollinger?.array && Array.isArray(signal.bollinger.array)) {
-    bollingerUpperData = signal.bollinger.array.map((bb) => ({
-      x: new Date(bb.datetime).getTime(),
-      y: bb.upper,
-    }));
-
-    bollingerLowerData = signal.bollinger.array.map((bb) => ({
-      x: new Date(bb.datetime).getTime(),
-      y: bb.lower,
-    }));
+    // Match Bollinger data with OHLC dates
+    signal.bollinger.array.forEach(bb => {
+      const bbTime = new Date(bb.datetime).getTime();
+      const ohlcIndex = candlestickData.findIndex(ohlc => ohlc.x === bbTime);
+      if (ohlcIndex !== -1) {
+        bollingerUpperData[ohlcIndex] = { x: bbTime, y: bb.upper };
+        bollingerLowerData[ohlcIndex] = { x: bbTime, y: bb.lower };
+      }
+    });
+    
+    const validBollingerPoints = bollingerUpperData.filter(point => point.y !== null).length;
+    console.log(`DEBUG: Bollinger total points: ${bollingerUpperData.length}, valid points: ${validBollingerPoints}`);
   } else if (signal.bollinger?.upper && signal.bollinger?.lower) {
-    bollingerUpperData = ohlc.map((p) => ({
-      x: new Date(p.datetime).getTime(),
-      y: signal.bollinger.upper,
-    }));
-
-    bollingerLowerData = ohlc.map((p) => ({
-      x: new Date(p.datetime).getTime(),
-      y: signal.bollinger.lower,
-    }));
+    // Static Bollinger values - apply to all dates (fallback)
+    bollingerUpperData = candlestickData.map(p => ({ x: p.x, y: signal.bollinger.upper }));
+    bollingerLowerData = candlestickData.map(p => ({ x: p.x, y: signal.bollinger.lower }));
+    console.log('DEBUG: Bollinger using static values for all dates');
   }
 
-  // Create MACD data from arrays if available
-  let macdLineData = [];
-  let macdSignalData = [];
+  // Create MACD data aligned with OHLC dates (null values for missing dates)
+  let macdLineData = candlestickData.map(ohlcPoint => ({ x: ohlcPoint.x, y: null }));
+  let macdSignalData = candlestickData.map(ohlcPoint => ({ x: ohlcPoint.x, y: null }));
 
-  if (signal.macd?.macdHistory && signal.macd?.signalHistory) {
-    macdLineData = signal.macd.macdHistory.map((macdValue, index) => ({
-      x: new Date(ohlc[25 + index]?.datetime).getTime(),
-      y: macdValue,
-    })).filter(point => !isNaN(point.x) && !isNaN(point.y));
+  // Use new datetime-aware arrays if available
+  if (signal.macd?.macdArray && signal.macd?.signalArray) {
+    // Match MACD line data with OHLC dates
+    signal.macd.macdArray.forEach(macdPoint => {
+      const macdTime = new Date(macdPoint.datetime).getTime();
+      const ohlcIndex = candlestickData.findIndex(ohlc => ohlc.x === macdTime);
+      if (ohlcIndex !== -1) {
+        macdLineData[ohlcIndex] = { x: macdTime, y: macdPoint.value };
+      }
+    });
 
-    macdSignalData = signal.macd.signalHistory.map((signalValue, index) => ({
-      x: new Date(ohlc[25 + 8 + index]?.datetime).getTime(),
-      y: signalValue,
-    })).filter(point => !isNaN(point.x) && !isNaN(point.y));
+    // Match MACD signal data with OHLC dates
+    signal.macd.signalArray.forEach(signalPoint => {
+      const signalTime = new Date(signalPoint.datetime).getTime();
+      const ohlcIndex = candlestickData.findIndex(ohlc => ohlc.x === signalTime);
+      if (ohlcIndex !== -1) {
+        macdSignalData[ohlcIndex] = { x: signalTime, y: signalPoint.value };
+      }
+    });
+    
+    const validMacdPoints = macdLineData.filter(point => point.y !== null).length;
+    const validSignalPoints = macdSignalData.filter(point => point.y !== null).length;
+    console.log(`DEBUG: MACD using datetime arrays - MACD: ${validMacdPoints}, Signal: ${validSignalPoints}`);
+  } 
+  // Fallback to old method if new arrays not available
+  else if (signal.macd?.macdHistory && signal.macd?.signalHistory) {
+    // Align MACD with OHLC starting from day 26 (index 25)
+    signal.macd.macdHistory.forEach((macdValue, i) => {
+      const ohlcIndex = 25 + i;
+      if (ohlcIndex < candlestickData.length && macdValue !== null && macdValue !== undefined) {
+        macdLineData[ohlcIndex] = { x: candlestickData[ohlcIndex].x, y: macdValue };
+      }
+    });
+
+    // Align MACD Signal with OHLC starting from day 34 (index 33)
+    signal.macd.signalHistory.forEach((signalValue, i) => {
+      const ohlcIndex = 33 + i;
+      if (ohlcIndex < candlestickData.length && signalValue !== null && signalValue !== undefined) {
+        macdSignalData[ohlcIndex] = { x: candlestickData[ohlcIndex].x, y: signalValue };
+      }
+    });
+    
+    const validMacdPoints = macdLineData.filter(point => point.y !== null).length;
+    const validSignalPoints = macdSignalData.filter(point => point.y !== null).length;
+    console.log(`DEBUG: MACD using fallback alignment - MACD: ${validMacdPoints}, Signal: ${validSignalPoints}`);
   }
 
   // Get min and max values for price axis scaling
@@ -179,7 +233,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       pointRadius: 0,
       fill: false,
       tension: 0.1,
-      spanGaps: true,
+      spanGaps: false, // Don't connect across null values
       yAxisID: "price",
     });
   }
@@ -196,6 +250,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       borderDash: [5, 5],
       pointRadius: 0,
       fill: false,
+      spanGaps: false, // Don't connect across null values
       yAxisID: "price",
     });
   }
@@ -211,6 +266,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       borderDash: [5, 5],
       pointRadius: 0,
       fill: "+1",
+      spanGaps: false, // Don't connect across null values
       yAxisID: "price",
     });
   }
@@ -231,6 +287,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       borderWidth: 2,
       pointRadius: 0,
       fill: false,
+      spanGaps: false, // Don't connect across null values
       yAxisID: "rsi",
       hidden: true,
     });
@@ -247,6 +304,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       borderWidth: 2,
       pointRadius: 0,
       fill: false,
+      spanGaps: false, // Don't connect across null values
       yAxisID: "macd",
       hidden: true,
     });
@@ -262,6 +320,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
       borderWidth: 2,
       pointRadius: 0,
       fill: false,
+      spanGaps: false, // Don't connect across null values
       yAxisID: "macd",
       hidden: true,
     });
@@ -428,6 +487,17 @@ const StockChart = ({ ohlc, sma, signal }) => {
         titleFont: { size: 14, weight: "600" },
         bodyFont: { size: 13 },
         callbacks: {
+          // Filter callback - only show datasets that have non-null values
+          filter: function(tooltipItem) {
+            // Always show OHLC data
+            if (tooltipItem.dataset.label === "Price") {
+              return true;
+            }
+            
+            // For line datasets, only show if y value is not null
+            return tooltipItem.parsed.y !== null;
+          },
+          
           label: function (context) {
             const datasetLabel = context.dataset.label || "";
             if (datasetLabel === "Price") {

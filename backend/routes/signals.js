@@ -4,6 +4,7 @@ const pool = require('../db');
 const axios = require('axios');
 const { calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands, calculateSMAArray } = require('../utils/indicators');
 const { generateRecommendation } = require('../utils/signalEngine');
+const { getCacheDurationInterval, logMarketStatus } = require('../utils/marketHours');
 
 const OUTPUT_SIZE = 100;
 
@@ -33,11 +34,27 @@ const fetchPriceData = async (symbol) => {
 };
 
 const getCachedSignalIfExists = async (symbol, date) => {
+    // Get cache duration based on market hours (hybrid approach)
+    const cacheInterval = getCacheDurationInterval();
+    
+    // Log market status for debugging
+    logMarketStatus();
+    
+    console.log(`DEBUG: Checking cache for ${symbol} on ${date} with ${cacheInterval} expiration`);
+    
     const res = await pool.query(
-        `SELECT * FROM Signal WHERE symbol = $1 AND date = $2`,
+        `SELECT * FROM signal WHERE symbol = $1 AND date = $2 
+         AND cached_at > NOW() - INTERVAL '${cacheInterval}'`,
         [symbol, date]
     );
-    return res.rows.length > 0 ? res : null;
+    
+    if (res.rows.length > 0) {
+        console.log(`DEBUG: Cache HIT for ${symbol} - using cached data from ${res.rows[0].cached_at}`);
+        return res;
+    } else {
+        console.log(`DEBUG: Cache MISS for ${symbol} - will fetch fresh data`);
+        return null;
+    }
 };
 
 const getCachedData = (cachedSignal, prices) => {
@@ -89,7 +106,9 @@ const getCachedData = (cachedSignal, prices) => {
             const macdResult = calculateMACD(prices);
             macdData = {
                 macdHistory: macdResult.macdHistory,
-                signalHistory: macdResult.signalHistory
+                signalHistory: macdResult.signalHistory,
+                macdArray: macdResult.macdArray,
+                signalArray: macdResult.signalArray
             };
         }
     } else {
@@ -97,7 +116,9 @@ const getCachedData = (cachedSignal, prices) => {
         const macdResult = calculateMACD(prices);
         macdData = {
             macdHistory: macdResult.macdHistory,
-            signalHistory: macdResult.signalHistory
+            signalHistory: macdResult.signalHistory,
+            macdArray: macdResult.macdArray,
+            signalArray: macdResult.signalArray
         };
     }
 
@@ -123,7 +144,9 @@ const getCachedData = (cachedSignal, prices) => {
             value: row.macd_value,
             signal: row.macd_signal,
             macdHistory: macdData.macdHistory,
-            signalHistory: macdData.signalHistory
+            signalHistory: macdData.signalHistory,
+            macdArray: macdData.macdArray || [],
+            signalArray: macdData.signalArray || []
         },
         bollinger: {
             upper: row.bollinger_upper,
@@ -159,6 +182,10 @@ router.get('/', async (req, res) => {
         if (!prices || prices.length === 0) {
             return res.status(404).json({ error: 'No price data found for symbol' });
         }
+        
+        console.log(`DEBUG: Fetched ${prices.length} price points for ${symbol}`);
+        console.log('DEBUG: First price:', prices[0]);
+        console.log('DEBUG: Last price:', prices[prices.length - 1]);
 
         const latestDate = prices[prices.length - 1].datetime; // Most recent date after sorting
         
@@ -196,12 +223,32 @@ router.get('/', async (req, res) => {
         });
 
         // Save signal to database with both latest values and full arrays
+        // Use UPSERT (INSERT ... ON CONFLICT) to update existing cache entries
         await pool.query(
-            `INSERT INTO Signal (
+            `INSERT INTO signal (
                 symbol, date, sma, rsi, macd_value, macd_signal, bollinger_upper, bollinger_lower, 
                 current_price, score, confidence, recommendation, explanation, sma_data, bollinger_data, macd_data,
-                contributions, components
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+                contributions, components, cached_at
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,CURRENT_TIMESTAMP)
+            ON CONFLICT (symbol, date) 
+            DO UPDATE SET 
+                sma = EXCLUDED.sma,
+                rsi = EXCLUDED.rsi,
+                macd_value = EXCLUDED.macd_value,
+                macd_signal = EXCLUDED.macd_signal,
+                bollinger_upper = EXCLUDED.bollinger_upper,
+                bollinger_lower = EXCLUDED.bollinger_lower,
+                current_price = EXCLUDED.current_price,
+                score = EXCLUDED.score,
+                confidence = EXCLUDED.confidence,
+                recommendation = EXCLUDED.recommendation,
+                explanation = EXCLUDED.explanation,
+                sma_data = EXCLUDED.sma_data,
+                bollinger_data = EXCLUDED.bollinger_data,
+                macd_data = EXCLUDED.macd_data,
+                contributions = EXCLUDED.contributions,
+                components = EXCLUDED.components,
+                cached_at = CURRENT_TIMESTAMP`,
             [
                 symbol, 
                 latestDate, 
@@ -220,8 +267,10 @@ router.get('/', async (req, res) => {
                 JSON.stringify(bollingerResult.array), // Store full Bollinger array
                 JSON.stringify({
                     macdHistory: macd.macdHistory,
-                    signalHistory: macd.signalHistory
-                }), // Store full MACD arrays
+                    signalHistory: macd.signalHistory,
+                    macdArray: macd.macdArray,
+                    signalArray: macd.signalArray
+                }), // Store full MACD arrays with datetime
                 JSON.stringify(analysisResult.contributions || {}),
                 JSON.stringify(analysisResult.components || {})
             ]
@@ -235,7 +284,9 @@ router.get('/', async (req, res) => {
                 value: macd.value,
                 signal: macd.signal,
                 macdHistory: macd.macdHistory,
-                signalHistory: macd.signalHistory
+                signalHistory: macd.signalHistory,
+                macdArray: macd.macdArray,
+                signalArray: macd.signalArray
             },
             bollinger: {
                 upper: bollingerResult.upper,
