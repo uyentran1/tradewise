@@ -110,6 +110,7 @@ const SignalPage = () => {
     }
   };
 
+
   if (loading) return (
     <Layout>
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -133,7 +134,7 @@ const SignalPage = () => {
           <h3 className="text-lg font-semibold text-slate-800 mb-2">Analysis Error</h3>
           <p className="text-red-600 mb-4">{error}</p>
           <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Back to Search
+            Back to Home
           </Link>
         </div>
       </div>
@@ -158,14 +159,11 @@ const SignalPage = () => {
                     {symbol.toUpperCase()}
                   </h1>
                   <div className="px-3 py-1 bg-slate-100 rounded-full">
-                    <span className="text-sm text-slate-600 font-medium">Technical Analysis</span>
+                    <span className="text-sm text-slate-600 font-medium">{signal.companyName}</span>
                   </div>
                 </div>
                 
                 <div className="flex items-baseline gap-6">
-                  <span className="text-4xl font-bold text-slate-800">
-                    ${signal.currentPrice.toFixed(2)}
-                  </span>
                   
                   {signal.priceChange !== undefined && (
                     <div className={`flex items-center text-xl font-semibold ${
@@ -173,6 +171,10 @@ const SignalPage = () => {
                         ? 'text-emerald-600' 
                         : 'text-red-600'
                     }`}>
+                      <span className={`text-4xl font-bold ${signal.priceChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`} fill="currentColor">
+                        ${signal.currentPrice.toFixed(2)}
+                      </span>
+
                       <svg className={`w-5 h-5 mr-1 ${signal.priceChange >= 0 ? 'rotate-0' : 'rotate-180'}`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
@@ -190,16 +192,11 @@ const SignalPage = () => {
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-semibold text-slate-700 mb-4">Trading Signal</h3>
                   <div className={`inline-flex items-center px-4 py-2 rounded-full text-xl font-bold ${getRecommendationStyle(signal.recommendation)}`}>
-                    {/* {getSignalIcon(signal.recommendation)} */}
                     <span className="ml-2">{signal.recommendation}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    {/* <span className="text-slate-600">Signal Points</span>
-                    <span className="font-bold text-slate-800">{Math.abs(signal.score || 0).toFixed(1)}/{signal.components?.maxPossibleScore?.toFixed(1) || '8.5'}</span> */}
-                  </div>
                   
                   <div className="w-full bg-slate-200 rounded-full h-3">
                     <div 
@@ -209,20 +206,18 @@ const SignalPage = () => {
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Confidence</span>
+                    <span className="text-slate-600">Trade Confidence</span>
                     <span className={`font-semibold ${getConfidenceColor(signal.confidence)}`}>
                       {signal.confidence}%
                     </span>
                   </div>
 
-                  {/* {signal.components?.signalStrength !== undefined && (
-                    // <div className="flex justify-between items-center">
-                    //   <span className="text-slate-600">Strong Signals</span>
-                    //   <span className="font-semibold text-slate-800">
-                    //     {signal.components.signalStrength}/4
-                    //   </span>
-                    // </div>
-                  )} */}
+                  {/* Signal Score */}
+                  {/* <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Signal Score</span>
+                    <span className="font-bold text-slate-800">{Math.abs(signal.score || 0).toFixed(1)}/{signal.components?.maxPossibleScore?.toFixed(0) || '8.5'}</span>
+                  </div> */}
+
                 </div>
               </div>
             </div>
@@ -465,12 +460,16 @@ const SignalPage = () => {
               {/* Weight Distribution */}
               {signal.components?.weightDistribution && (
                 <div className="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
-                  <h3 className="font-bold text-blue-800 mb-4">Indicator Weight Distribution</h3>
+                  <h3 className="font-bold text-blue-800 mb-10 pb-6">Indicator Weight Distribution to Total Score:</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Object.entries(signal.components.weightDistribution).map(([indicator, weight]) => (
                       <div key={indicator} className="text-center p-3 bg-white rounded-lg border border-blue-200">
-                        <div className="text-lg font-bold text-blue-800">{weight}</div>
-                        <div className="text-sm text-blue-600 uppercase">{indicator}</div>
+                        <div className="text-md font-bold text-blue-800 uppercase">{indicator}</div>
+                        <div className="text-md text-blue-600">{weight}</div>
+                        {indicator === "sma" && <p className="text-sm text-blue-800 pt-2">Basic trend indicator</p>}
+                        {indicator === "rsi" && <p className="text-sm text-blue-800 pt-2">Reliable for extreme price ranges</p>}
+                        {indicator === "macd" && <p className="text-sm text-blue-800 pt-2">Both momentum and trend predictor</p>}
+                        {indicator === "bollinger" && <p className="text-sm text-blue-800 pt-2">Good volatility breakout predictor</p>}               
                       </div>
                     ))}
                   </div>

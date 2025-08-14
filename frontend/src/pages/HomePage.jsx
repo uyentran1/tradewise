@@ -23,7 +23,7 @@ const HomePage = () => {
             Empowering You with Smart Trading Signals
           </h1>
           <p className="text-xl mb-12 text-slate-300 max-w-3xl mx-auto font-medium">
-            Search and understand signals for any stock with confidence. 
+            Search and understand signals for US stocks with confidence. 
           </p>
           {/* <p className="text-lg mb-12 text-slate-400 max-w-2xl mx-auto">
             Make data-driven decisions with confidence.
@@ -43,7 +43,7 @@ const HomePage = () => {
               Why Choose Our Platform?
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Built for traders with accuracy, speed, and comprehensive market insights.
+              Built for traders with accuracy, speed, and insights.
             </p>
           </div>
           
@@ -97,14 +97,14 @@ const HomePage = () => {
               How It Works
             </h2>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              Our streamlined process gets you from market data to actionable insights in seconds
+              Our streamlined process gets you from market data to actionable insights in seconds.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-16">
             <div className="text-center group">
               <div className="relative mb-8">
-                <div className="relative -right-5 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                <div className="relative -right-16 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   1
                 </div>
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
@@ -115,13 +115,14 @@ const HomePage = () => {
               </div>
               <h3 className="text-2xl font-bold text-white mb-4 pb-2">Search Any Stock</h3>
               <p className="text-slate-300 leading-relaxed">
-                Enter any stock symbol to access comprehensive technical analysis and real-time market data.
+                Enter any stock symbol to access <br /> 
+                technical analysis and market data.
               </p>
             </div>
             
             <div className="text-center group">
               <div className="relative mb-8">
-                <div className="relative -right-5 w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                <div className="relative -right-14 w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   2
                 </div>
                 <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
@@ -132,13 +133,14 @@ const HomePage = () => {
               </div>
               <h3 className="text-2xl font-bold text-white mb-4 pb-2">Analyse Signals</h3>
               <p className="text-slate-300 leading-relaxed">
-                Review comprehensive technical indicators with clear buy, sell, or hold recommendations backed by data.
+                Review technical indicators with clear buy, sell,  <br />  
+                or hold recommendations backed by data.
               </p>
             </div>
             
             <div className="text-center group">
               <div className="relative mb-8">
-                <div className="relative -right-5 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                <div className="relative -right-16 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   3
                 </div>
                 <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all duration-300">
@@ -149,7 +151,8 @@ const HomePage = () => {
               </div>
               <h3 className="text-2xl font-bold text-white mb-4 pb-2">Make Informed Decisions</h3>
               <p className="text-slate-300 leading-relaxed">
-                Execute trades with confidence using our signal scoring and detailed market analysis insights.
+                Execute trades with confidence using our <br /> 
+                signal scoring and detailed analysis.
               </p>
             </div>
           </div>

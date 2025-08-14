@@ -549,7 +549,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               <strong className="text-slate-700">SMA (20-day)</strong> 
             </div>
-            <div className="text-2xl font-bold text-slate-800">
+            <div className="text-xl font-bold text-slate-800">
               ${signal.sma?.toFixed(2)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
@@ -562,7 +562,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
               <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
               <strong className="text-slate-700">RSI</strong> 
             </div>
-            <div className="text-2xl font-bold text-slate-800">
+            <div className="text-xl font-bold text-slate-800">
               {signal.rsi?.toFixed(1)}
             </div>
             <div className={`text-xs mt-1 font-medium ${
@@ -579,7 +579,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
               <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
               <strong className="text-slate-700">MACD</strong>
             </div>
-            <div className="text-lg font-bold text-slate-800">
+            <div className="text-xl font-bold text-slate-800">
               {signal.macd?.value.toFixed(3)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
@@ -592,7 +592,7 @@ const StockChart = ({ ohlc, sma, signal }) => {
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
               <strong className="text-slate-700">Bollinger Bands</strong>
             </div>
-            <div className="text-sm font-semibold text-slate-800">
+            <div className="text-xl font-semibold text-slate-800">
               ${signal.bollinger?.lower?.toFixed(2)} - ${signal.bollinger?.upper?.toFixed(2)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
