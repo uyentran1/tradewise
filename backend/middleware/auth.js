@@ -30,4 +30,30 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-module.exports = { authenticateToken };
+/**
+ * Optional authentication middleware
+ * Sets req.user if token is present and valid, but doesn't reject requests without token
+ */
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        // No token provided, continue without authentication
+        req.user = null;
+        return next();
+    }
+
+    // Verify token if present
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            // Invalid token, but don't reject the request
+            req.user = null;
+        } else {
+            req.user = user;
+        }
+        next();
+    });
+};
+
+module.exports = { authenticateToken, optionalAuth };

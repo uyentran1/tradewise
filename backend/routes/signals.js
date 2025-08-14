@@ -4,9 +4,66 @@ const pool = require('../db');
 const axios = require('axios');
 const { calculateSMA, calculateRSI, calculateMACD, calculateBollingerBands, calculateSMAArray } = require('../utils/indicators');
 const { generateRecommendation } = require('../utils/signalEngine');
-const { getCacheDurationInterval, logMarketStatus } = require('../utils/marketHours');
+const { getCacheDurationInterval, logMarketStatus, detectMarketFromExchange } = require('../utils/marketHours');
 
 const OUTPUT_SIZE = 100;
+
+const getOrCreateStockInfo = async (symbol) => {
+    try {
+        // Check local DB first
+        const result = await pool.query(
+            'SELECT * FROM "Stock" WHERE symbol = $1',
+            [symbol]
+        );
+
+        if (result.rows.length > 0) {
+            return { ...result.rows[0], source: 'local' };
+        }
+
+        // Fallback to Twelve Data API
+        const response = await axios.get('https://api.twelvedata.com/quote', {
+            params: {
+                symbol,
+                apikey: process.env.TWELVE_DATA_API_KEY
+            }
+        });
+
+        const data = response.data;
+        console.log(data);
+
+        if (data.code || !data.name) {
+            throw new Error('Stock not found via API');
+        }
+
+        // Determine market based on exchange
+        const market = detectMarketFromExchange(data.exchange);
+
+        // Insert into local DB for future use
+        await pool.query(
+            `INSERT INTO "Stock" (symbol, name, exchange, market) VALUES ($1, $2, $3, $4)`,
+            [symbol, data.name, data.exchange, market]
+        );
+
+        return {
+            symbol,
+            name: data.name,
+            exchange: data.exchange,
+            market,
+            source: 'api'
+        };
+
+    } catch (err) {
+        console.error('Error fetching stock info:', err.message || err);
+        // Return minimal info as fallback
+        return {
+            symbol,
+            name: symbol,
+            exchange: null,
+            market: 'US',
+            source: 'fallback'
+        };
+    }
+};
 
 const fetchPriceData = async (symbol) => {
     const url = `https://api.twelvedata.com/time_series`;
@@ -19,6 +76,12 @@ const fetchPriceData = async (symbol) => {
 
     try {
         const response = await axios.get(url, {params});
+        
+        if (response.data.status === 'error') {
+            console.error('TwelveData API error:', response.data);
+            throw new Error(`TwelveData API error: ${response.data.message || 'Unknown error'}`);
+        }
+        
         let prices = response.data?.values; // response.data is typically {meta : {}, values: [], status: ok}
         
         // Sort prices by datetime (oldest first) for proper calculation
@@ -29,19 +92,23 @@ const fetchPriceData = async (symbol) => {
         return prices;
     } catch (err) {
         console.error('Error fetching from Twelve Data API: ', err.message || err);
+        if (err.response) {
+            console.error('API Response data:', err.response.data);
+        }
         throw err;
     }
 };
 
 const getCachedSignalIfExists = async (symbol, date) => {
-    // Get cache duration based on market hours (hybrid approach)
-    const cacheInterval = getCacheDurationInterval();
+    // Get cache duration based on market hours for the specific symbol's market
+    const cacheInterval = await getCacheDurationInterval(symbol);
     
     // Log market status for debugging
-    logMarketStatus();
+    await logMarketStatus(symbol);
     
     console.log(`DEBUG: Checking cache for ${symbol} on ${date} with ${cacheInterval} expiration`);
     
+    // Find if there is previous cache still valid (within interval)
     const res = await pool.query(
         `SELECT * FROM signal WHERE symbol = $1 AND date = $2 
          AND cached_at > NOW() - INTERVAL '${cacheInterval}'`,
@@ -57,11 +124,11 @@ const getCachedSignalIfExists = async (symbol, date) => {
     }
 };
 
-const getCachedData = (cachedSignal, prices) => {
+const getCachedData = (cachedSignal, prices, stockInfo) => {
     const row = cachedSignal.rows[0];
     
     // Calculate price change for cached data
-    const currentPrice = row.current_price;
+    const currentPrice = parseFloat(row.current_price);
     const previousPrice = prices.length >= 2 ? parseFloat(prices[prices.length - 2].close) : currentPrice;
     const priceChange = currentPrice - previousPrice;
     const priceChangePercent = previousPrice !== 0 ? (priceChange / previousPrice) * 100 : 0;
@@ -138,26 +205,27 @@ const getCachedData = (cachedSignal, prices) => {
     
     const cachedData = {
         symbol: row.symbol,
-        sma: row.sma,
-        rsi: row.rsi,
+        companyName: stockInfo.name,
+        sma: parseFloat(row.sma),
+        rsi: parseFloat(row.rsi),
         macd: {
-            value: row.macd_value,
-            signal: row.macd_signal,
+            value: parseFloat(row.macd_value),
+            signal: parseFloat(row.macd_signal),
             macdHistory: macdData.macdHistory,
             signalHistory: macdData.signalHistory,
             macdArray: macdData.macdArray || [],
             signalArray: macdData.signalArray || []
         },
         bollinger: {
-            upper: row.bollinger_upper,
-            lower: row.bollinger_lower,
+            upper: parseFloat(row.bollinger_upper),
+            lower: parseFloat(row.bollinger_lower),
             array: bollingerData // Full array for charting
         },
-        currentPrice: row.current_price,
+        currentPrice,
         priceChange,
         priceChangePercent,
-        confidence: row.confidence,
-        score: row.score,
+        confidence: parseFloat(row.confidence),
+        score: parseFloat(row.score),
         recommendation: row.recommendation,
         explanation: row.explanation,
         contributions,
@@ -176,23 +244,42 @@ router.get('/', async (req, res) => {
     const symbol = req.query.symbol?.toUpperCase();
     if (!symbol) return res.status(400).json({ error: 'Symbol is required' });
 
+    let prices;
+
     try {
-        const prices = await fetchPriceData(symbol);
-        
-        if (!prices || prices.length === 0) {
-            return res.status(404).json({ error: 'No price data found for symbol' });
+        prices = await fetchPriceData(symbol);
+
+    } catch (err) {
+        // Rate limit error
+        if (err.response?.status === 429 || err.message?.includes('rate limit') || err.message?.includes('quota')) {
+            return res.status(429).json({ error: 'Max queries exceeded. Please try again in the next minute.' });
         }
-        
+        // Invalid symbol error
+        if (err.response?.status === 400 || err.message?.includes('valid') || err.message?.includes('not found')) {
+            return res.status(404).json({ error: 'Invalid symbol. Please enter a valid stock symbol.' });
+        }
+        // Generic error for other cases
+        return res.status(503).json({ error: 'Unable to fetch stock data. Please try again later.' });
+    }
+    
+    if (!prices || prices.length <= 0) {
+        return res.status(404).json({ error: 'No data found for this symbol.' });
+    }
+    
+    try {
         console.log(`DEBUG: Fetched ${prices.length} price points for ${symbol}`);
         console.log('DEBUG: First price:', prices[0]);
         console.log('DEBUG: Last price:', prices[prices.length - 1]);
 
         const latestDate = prices[prices.length - 1].datetime; // Most recent date after sorting
         
+        // Get or create stock info with exchange and market data
+        const stockInfo = await getOrCreateStockInfo(symbol);
+        
         // Return cached data if it exists in database
         const cachedSignal = await getCachedSignalIfExists(symbol, latestDate);
         if (cachedSignal) {
-            const cachedData = getCachedData(cachedSignal, prices);
+            const cachedData = getCachedData(cachedSignal, prices, stockInfo);
             return res.json(cachedData);
         }
         
@@ -223,7 +310,7 @@ router.get('/', async (req, res) => {
         });
 
         // Save signal to database with both latest values and full arrays
-        // Use UPSERT (INSERT ... ON CONFLICT) to update existing cache entries
+        // Use UPSERT (INSERT ... ON CONFLICT) to overwrite existing cache entries with newer values
         await pool.query(
             `INSERT INTO signal (
                 symbol, date, sma, rsi, macd_value, macd_signal, bollinger_upper, bollinger_lower, 
@@ -278,6 +365,7 @@ router.get('/', async (req, res) => {
 
         const signalData = {
             symbol,
+            companyName: stockInfo.name,
             sma,
             rsi,
             macd: { 
@@ -311,7 +399,7 @@ router.get('/', async (req, res) => {
         res.json(signalData);
     } catch (err) {
         console.error('Signal analysis error:', err.message || err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: err.message || 'Internal server error' });
     }
 });
 
