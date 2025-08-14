@@ -148,7 +148,7 @@ function analyseBollingerBands(bollinger, currentPrice, state) {
 
 
 function generateRecommendation(indicators) {
-    // Initialize fresh state for each call
+    // Initialise fresh state for each call
     let score = 0;
     let reasons = [];
     let strongSignalCount = 0;

@@ -98,7 +98,6 @@ function calculateEMA(prices, period) {
  * @returns {Object} {value, signal, histogram, macdHistory, signalHistory}
  */
 function calculateMACD(prices) {
-    console.log(`DEBUG: MACD calculation - prices length: ${prices.length}`);
     const closes = prices.map(p => parseFloat(p.close));
     
     // Calculate EMA arrays
@@ -114,8 +113,6 @@ function calculateMACD(prices) {
     // Calculate signal line (9-period EMA of MACD)
     const signal = calculateEMA(macdLine, 9);
     
-    console.log(`DEBUG: MACD arrays - macdLine: ${macdLine.length}, signal: ${signal.length}`);
-    
     // Return latest values and full arrays
     const latestMACD = macdLine[macdLine.length - 1];
     const latestSignal = signal[signal.length - 1];
@@ -124,7 +121,6 @@ function calculateMACD(prices) {
     const macdArray = macdLine.map((value, index) => {
         const priceIndex = 25 + index;
         if (priceIndex >= prices.length) {
-            console.warn(`MACD: Price index ${priceIndex} out of bounds (prices length: ${prices.length})`);
             return null;
         }
         return {
@@ -134,17 +130,16 @@ function calculateMACD(prices) {
     }).filter(item => item !== null);
     
     // Create Signal array with datetime (starts from index 33: 25 + 8)
-    const signalArray = signal.map((value, index) => {
-        const priceIndex = 25 + 8 + index;
-        if (priceIndex >= prices.length) {
-            console.warn(`MACD Signal: Price index ${priceIndex} out of bounds (prices length: ${prices.length})`);
-            return null;
+    const signalArray = [];
+    for (let i = 8; i < signal.length; i++) { // Start from index 8 where signal is defined
+        const priceIndex = 25 + i;
+        if (priceIndex < prices.length && signal[i] !== undefined) {
+            signalArray.push({
+                datetime: prices[priceIndex].datetime,
+                value: signal[i]
+            });
         }
-        return {
-            datetime: prices[priceIndex].datetime,
-            value: value
-        };
-    }).filter(item => item !== null);
+    }
     
     return {
         // Latest values (for database storage)
