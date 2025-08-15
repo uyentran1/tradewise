@@ -4,6 +4,7 @@ const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const { validatePassword } = require('../utils/passwordSecurity');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -15,12 +16,23 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'Full name, email and password are required.' });
 
     try {
+        // Validate password security
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ 
+                error: `Password validation failed:\n ${passwordValidation.errors.join('.\n')}`,
+                details: passwordValidation.errors,
+                requirements: passwordValidation.requirements,
+                strength: passwordValidation.strength
+            });
+        }
+
         // Check if email already exists
         const userCheck = await pool.query('SELECT * FROM "User" WHERE email = $1', [email]);
         if (userCheck.rows.length > 0) return res.status(400).json({ error: 'This email has already been registered.' });
 
         // Hash the password
-        const saltRounds = 10;
+        const saltRounds = 12; // Increased from 10 for better security
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Insert into database
@@ -29,7 +41,11 @@ router.post('/register', async (req, res) => {
             [fullName, email, hashedPassword]
         );
 
-        res.status(201).json({ message: 'User registered sucessfully.', user: newUser.rows[0] });
+        res.status(201).json({ 
+            message: 'User registered successfully.', 
+            user: newUser.rows[0],
+            passwordStrength: passwordValidation.strength.label
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Registration failed.' });
