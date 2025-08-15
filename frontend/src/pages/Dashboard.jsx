@@ -33,7 +33,7 @@ export default function Dashboard() {
 
         setSavedSignals(savedResponse.data.savedSignals || []);
         setWatchlist(watchlistResponse.data.watchlistWithSignals || []);
-        
+
         console.log('DEBUG: Set', savedResponse.data.savedSignals?.length || 0, 'saved signals');
         console.log('DEBUG: Set', watchlistResponse.data.watchlistWithSignals?.length || 0, 'watchlist items');
       } catch (err) {
@@ -170,6 +170,7 @@ export default function Dashboard() {
                       <Link 
                         to="/" 
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                        style={{ color: "white"}}
                       >
                         Explore Signals
                       </Link>
@@ -226,7 +227,8 @@ export default function Dashboard() {
 
                           <Link
                             to={`/signal/${signal.symbol}`}
-                            className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            className="block w-full text-center bg-blue-600 py-2 rounded-lg hover:bg-blue-700 transition-colors text-white"
+                            style={{ color: "white"}}
                           >
                             View Current Signal
                           </Link>
@@ -248,6 +250,7 @@ export default function Dashboard() {
                       <Link 
                         to="/" 
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                        style={{ color: "white"}}
                       >
                         Find Stocks
                       </Link>
@@ -304,6 +307,7 @@ export default function Dashboard() {
                           <Link
                             to={`/signal/${item.symbol}`}
                             className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            style={{ color: "white"}}
                           >
                             View Signal
                           </Link>
