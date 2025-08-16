@@ -9,7 +9,14 @@ const watchlistRoute = require('./routes/watchlist');
 
 const app = express();
 
-app.use(cors()); // Middleware
+// CORS configuration for production security
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Vite default port
+  credentials: false,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions)); // Middleware
 app.use(express.json()); // for parsing JSON requests
 
 app.use('/signals', signalRoute);
