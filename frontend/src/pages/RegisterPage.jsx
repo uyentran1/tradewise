@@ -18,16 +18,21 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const handleOTPVerificationSuccess = (token, user) => {
-    login(token);
-    setMessage('Registration and verification successful!');
-    setFullName('');
-    setEmail('');
-    setPassword('');
-    setConfirm('');
-    setShowOTPVerification(false);
-    setTempToken('');
-    navigate('/');
+  const handleOTPVerificationSuccess = (result) => {
+    if (result.registrationComplete) {
+      setMessage('Registration completed successfully! Redirecting to login...');
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirm('');
+      setShowOTPVerification(false);
+      setTempToken('');
+      setTimeout(() => navigate('/login'), 1000);
+    } else {
+      // For login verification (shouldn't happen here but keeping for safety)
+      login(result.token);
+      navigate('/');
+    }
   };
 
   const handleOTPCancel = () => {

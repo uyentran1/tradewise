@@ -239,9 +239,15 @@ router.post('/verify-email', async (req, res) => {
                 [decoded.userId]
             );
             console.log(`Registration verification completed for user ${decoded.userId}`);
+            
+            res.json({ 
+                registrationComplete: true,
+                message: 'Registration completed successfully! Please log in to continue.'
+            });
+            return;
         }
 
-        // Generate regular JWT token (email verified)
+        // Generate regular JWT token (email verified) - for login only
         const token = jwt.sign(
             { 
                 userId: decoded.userId, 

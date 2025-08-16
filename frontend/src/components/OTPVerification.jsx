@@ -65,8 +65,8 @@ const OTPVerification = ({ tempToken, onVerificationSuccess, onCancel }) => {
         verificationCode: otpCode
       });
 
-      // Success - call parent callback with token
-      onVerificationSuccess(response.data.token, response.data.user);
+      // Success - call parent callback with result
+      onVerificationSuccess(response.data);
 
     } catch (err) {
       console.error('Email verification error:', err);

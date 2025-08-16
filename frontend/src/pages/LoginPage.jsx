@@ -63,14 +63,16 @@ const LoginPage = () => {
     }
   };
 
-  const handleOTPVerificationSuccess = (token, user) => {
-    login(token);
-    setMessage('Login successful!');
-    setEmail('');
-    setPassword('');
-    setShowOTPVerification(false);
-    setTempToken('');
-    navigate('/');
+  const handleOTPVerificationSuccess = (result) => {
+    if (result.token) {
+      login(result.token);
+      setMessage('Login successful!');
+      setEmail('');
+      setPassword('');
+      setShowOTPVerification(false);
+      setTempToken('');
+      navigate('/');
+    }
   };
 
   const handleOTPCancel = () => {
