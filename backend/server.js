@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const pool = require('./db');
 
 const signalRoute = require('./routes/signals');
@@ -19,6 +20,16 @@ const corsOptions = {
 app.use(cors(corsOptions)); // Middleware
 app.use(express.json()); // for parsing JSON requests
 
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window per IP
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/auth', authLimiter);
 app.use('/signals', signalRoute);
 app.use('/auth', authRoute);
 app.use('/saved-signals', savedSignalsRoute);
