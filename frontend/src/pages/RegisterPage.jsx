@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import API from '../api';
 import Layout from '../layouts/Layout';
+import OTPVerification from '../components/OTPVerification';
 
 const RegisterPage = () => {
   const [fullName, setFullName] = useState('');
@@ -12,8 +13,28 @@ const RegisterPage = () => {
   const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [tempToken, setTempToken] = useState('');
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+
+  const handleOTPVerificationSuccess = (token, user) => {
+    login(token);
+    setMessage('Registration and verification successful!');
+    setFullName('');
+    setEmail('');
+    setPassword('');
+    setConfirm('');
+    setShowOTPVerification(false);
+    setTempToken('');
+    navigate('/');
+  };
+
+  const handleOTPCancel = () => {
+    setShowOTPVerification(false);
+    setTempToken('');
+    setMessage('Registration cancelled. Please try again.');
+  };
 
   const handleGoogleSignup = async (credentialResponse) => {
     setIsLoading(true);
@@ -47,13 +68,21 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      await API.post('/auth/register', { fullName, email, password });
+      const res = await API.post('/auth/register', { fullName, email, password });
 
-      setMessage('Account created successfully! You can now sign in.');
-      setFullName('');
-      setEmail('');
-      setPassword('');
-      setConfirm('');
+      // Check if verification is required
+      if (res.data.requiresVerification) {
+        setTempToken(res.data.tempToken);
+        setShowOTPVerification(true);
+        setMessage(res.data.message || 'Please check your email for the verification code.');
+      } else {
+        // This shouldn't happen but keeping for safety
+        setMessage('Account created successfully!');
+        setFullName('');
+        setEmail('');
+        setPassword('');
+        setConfirm('');
+      }
     } catch (err) {
       console.error(err);
       const errorMsg = err?.response?.data?.error || 'Registration failed. Please try again.';
@@ -62,6 +91,17 @@ const RegisterPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Show OTP verification if required
+  if (showOTPVerification) {
+    return (
+      <OTPVerification
+        tempToken={tempToken}
+        onVerificationSuccess={handleOTPVerificationSuccess}
+        onCancel={handleOTPCancel}
+      />
+    );
+  }
 
   return (
     <Layout hideLink="register">
@@ -229,12 +269,14 @@ const RegisterPage = () => {
 
             {/* Message Display */}
             {message && (
-              <div className={`mt-6 p-4 rounded-xl text-sm text-center ${
+              <div className={`mt-6 p-4 rounded-xl text-sm text-left ${
                 message.includes('successfully') 
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                   : 'bg-red-50 text-red-700 border border-red-200'
               }`}>
-                {message}
+                <div className="whitespace-pre-line">
+                  {message}
+                </div>
               </div>
             )}
           </div>
