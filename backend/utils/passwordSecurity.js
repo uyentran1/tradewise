@@ -3,11 +3,18 @@ const zxcvbn = require('zxcvbn');
 /**
  * Password Security Utility
  * Validates password strength and common security criteria
+ * Requirements in this app:
+ * 'At least 8 characters long',
+ * 'Contains uppercase letter (A-Z)',
+ * 'Contains lowercase letter (a-z)', 
+ * 'Contains at least one number (0-9)',
+ * 'Contains special character (!@#$%^&*)',
+ * 'Not a common or easily guessed password',
+ * 'Strong enough to resist attacks'
  */
 
-/**
- * Common weak passwords to reject
- */
+
+// Common weak passwords to reject
 const COMMON_PASSWORDS = [
     'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
     'admin', 'letmein', 'welcome', 'monkey', '1234567890', 'password1',
@@ -94,11 +101,6 @@ const validatePassword = (password) => {
         requirements.strength = true;
     }
 
-    // Check for personal information patterns (basic)
-    if (containsPersonalInfo(password)) {
-        errors.push('Password should not contain easily guessable personal information');
-    }
-
     const isValid = errors.length === 0;
     
     return {
@@ -114,55 +116,13 @@ const validatePassword = (password) => {
     };
 };
 
-/**
- * Check for basic personal information patterns
- * @param {string} password 
- * @returns {boolean}
- */
-const containsPersonalInfo = (password) => {
-    const lower = password.toLowerCase();
-    
-    // Check for common personal info patterns
-    const personalPatterns = [
-        /^(admin|user|guest)/,
-        /(name|email|phone|address)/,
-        /^(test|demo|sample)/,
-        /(birthday|birth|age)/,
-        /(company|work|job)/
-    ];
-    
-    return personalPatterns.some(pattern => pattern.test(lower));
-};
 
-/**
- * Get human-readable strength label
- * @param {number} score - zxcvbn score (0-4)
- * @returns {string}
- */
 const getStrengthLabel = (score) => {
     const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
     return labels[score] || 'Unknown';
 };
 
-/**
- * Generate password requirements text for frontend
- * @returns {Array} Array of requirement strings
- */
-const getPasswordRequirements = () => {
-    return [
-        'At least 8 characters long',
-        'Contains uppercase letter (A-Z)',
-        'Contains lowercase letter (a-z)', 
-        'Contains at least one number (0-9)',
-        'Contains special character (!@#$%^&*)',
-        'Not a common or easily guessed password',
-        'Strong enough to resist attacks'
-    ];
-};
 
 module.exports = {
     validatePassword,
-    getPasswordRequirements,
-    getStrengthLabel,
-    COMMON_PASSWORDS
 };
