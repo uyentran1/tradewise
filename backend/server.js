@@ -23,7 +23,7 @@ app.use(express.json()); // for parsing JSON requests
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window per IP
+  max: 100, // 5 attempts per window per IP - increase to accommodate more users during UAT
   message: { error: 'Too many authentication attempts. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
